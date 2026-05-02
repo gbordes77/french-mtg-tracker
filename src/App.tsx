@@ -3,7 +3,6 @@ import { Flag, ExternalLink } from "lucide-react";
 import type { EventData, FrenchPlayer, MTGEvent } from "@/lib/types";
 import { computeTotalRecord } from "@/lib/helpers";
 import Header from "@/components/Header";
-import StatusPill from "@/components/StatusPill";
 import StatBlock from "@/components/StatBlock";
 import EventCard from "@/components/EventCard";
 import PerformanceRow from "@/components/PerformanceRow";
@@ -130,24 +129,6 @@ export default function App() {
           {/* DASHBOARD HERO — event en cours + stats FR */}
           <div className="grid grid-cols-12 gap-6 mb-12">
             <div className="col-span-12 lg:col-span-8">
-              <div className="flex items-center gap-3 mb-4 flex-wrap">
-                <StatusPill status={event.status} />
-                <span
-                  className="font-mono"
-                  style={{ fontSize: "11px", color: "var(--text-secondary)" }}
-                >
-                  Round {event.currentRound} / {event.totalRounds}
-                </span>
-                {event.field && (
-                  <span
-                    className="font-mono"
-                    style={{ fontSize: "11px", color: "var(--text-secondary)" }}
-                  >
-                    {event.field} joueurs · ${event.purse.toLocaleString()}
-                  </span>
-                )}
-              </div>
-
               {/* Titre avec gradient WUBRG (signature ManaTuner brandbook §3).
                   h2 car le h1 unique de la page est dans MarketingHero. */}
               <h2
@@ -236,6 +217,39 @@ export default function App() {
                     <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                   </a>
                 )}
+                {/* Fact sheet officielle Wizards : prize pool, schedule, format details, seuils. */}
+                <a
+                  href={`https://magic.gg/events/${event.slug.startsWith("pt-") ? "pro-tour-" + event.slug.slice(3) : event.slug}-fact-sheet-for-competitors`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 transition-all"
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "var(--radius-lg)",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    background: "rgba(233, 181, 76, 0.12)",
+                    color: "#8a6500",
+                    border: "1px solid rgba(233, 181, 76, 0.30)",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background =
+                      "rgba(233, 181, 76, 0.22)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background =
+                      "rgba(233, 181, 76, 0.12)")
+                  }
+                  aria-label={`Fact sheet officielle ${event.name} (prize pool, schedule, formats)`}
+                >
+                  <span>Fact sheet</span>
+                  <span className="font-mono" style={{ opacity: 0.85 }}>
+                    ${event.purse.toLocaleString()}
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                </a>
               </div>
             </div>
 
