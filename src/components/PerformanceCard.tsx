@@ -6,6 +6,7 @@ import {
   performanceTone,
   toneColors,
   projectionColor,
+  explainSource,
 } from "@/lib/helpers";
 import ArchetypeChip from "./ArchetypeChip";
 
@@ -180,16 +181,44 @@ export default function PerformanceCard({ player, event }: Props) {
             {perf.label}
           </span>
         </div>
-        <span
-          className="font-mono"
+      </div>
+
+      {/* Méthode de qualification — labelée pour la clarté */}
+      <div className="mb-2">
+        <div
+          className="font-mono uppercase"
+          style={{
+            fontSize: "9px",
+            letterSpacing: "0.15em",
+            color: "var(--text-secondary)",
+            opacity: 0.6,
+          }}
+        >
+          Méthode de qualification à ce PT
+        </div>
+        <div
+          className="font-mono mt-0.5"
           style={{
             fontSize: "10px",
-            color: "var(--text-secondary)",
-            opacity: 0.85,
+            color: "var(--text-primary)",
+            fontWeight: 600,
           }}
         >
           {player.source}
-        </span>
+        </div>
+        {explainSource(player.source) && (
+          <div
+            className="mt-0.5"
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "10px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.4,
+            }}
+          >
+            {explainSource(player.source)}
+          </div>
+        )}
       </div>
 
       {/* Ligne 5 : projections */}

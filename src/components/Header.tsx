@@ -1,4 +1,4 @@
-import { Activity, Calendar, Target, Github, Sun, Moon } from "lucide-react";
+import { Activity, Calendar, Target, Award, Github, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "suivi", label: "Suivi", icon: Activity, href: "#suivi" },
   { id: "events", label: "À venir", icon: Calendar, href: "#events" },
   { id: "seuils", label: "Seuils", icon: Target, href: "#seuils" },
+  { id: "amp", label: "AMP", icon: Award, href: "#amp" },
 ];
 
 export default function Header() {

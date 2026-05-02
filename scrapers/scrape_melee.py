@@ -325,7 +325,12 @@ def filter_french_pairings(
                          "last": "Steuer", "gameWins": 1, "archetype": "Selesnya Landfall"},
         }
     """
-    fr_index = {normalize_name(p["name"]): p for p in config.get("players", [])}
+    # Même filtre défensif que identify_french : verified=true uniquement.
+    fr_index = {
+        normalize_name(p["name"]): p
+        for p in config.get("players", [])
+        if p.get("verified") is True
+    }
     excluded_norm = {normalize_name(p["name"]) for p in config.get("excluded", [])}
 
     def _competitor_to_compact(c: dict[str, Any]) -> dict[str, Any]:
@@ -518,9 +523,24 @@ def identify_french(
     config: dict[str, Any],
     decklist_index: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Croise les standings melee avec la liste FR (matching normalisé)."""
-    fr_index = {normalize_name(p["name"]): p for p in config.get("players", [])}
+    """Croise les standings melee avec la liste FR (matching normalisé).
+
+    Filtre défensif : on n'inclut QUE les joueurs verified=true. Les
+    candidats non-vérifiés (verified=false ou absent) ne fuitent jamais
+    publiquement, même s'ils sont accidentellement laissés dans players:.
+    """
+    fr_index = {
+        normalize_name(p["name"]): p
+        for p in config.get("players", [])
+        if p.get("verified") is True
+    }
     excluded_norm = {normalize_name(p["name"]) for p in config.get("excluded", [])}
+
+    n_pending = sum(
+        1 for p in config.get("players", []) if p.get("verified") is not True
+    )
+    if n_pending:
+        logger.warning("%d joueurs non-vérifiés ignorés (verified != true)", n_pending)
 
     result = []
     for row in standings:
@@ -544,7 +564,7 @@ def identify_french(
             "ogw": row.get("OpponentGameWinPercentage"),
             "decklist_id": (decklist_index or {}).get(norm),
             "twitter": fr_meta.get("twitter"),
-            "verified": fr_meta.get("verified", False),
+            "verified": True,
         })
     return result
 

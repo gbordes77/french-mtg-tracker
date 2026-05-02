@@ -47,6 +47,22 @@ export interface FrenchPlayer {
 
 export type DataSource = "melee.gg" | "magic.gg";
 
+export interface AmpPlayer {
+  "Last Name": string;
+  "First Name": string;
+  "Post PT ECL Total"?: number | null;
+  "Post PT MSH Total"?: number | null;
+  "Post PT SOS Total"?: number | null;
+  [key: string]: unknown;
+}
+
+export interface AmpData {
+  lastUpdated: string | null;
+  scrapedAt: string;
+  ptColumns: string[];
+  players: AmpPlayer[];
+}
+
 export interface LiveMatchCompetitor {
   name: string;       // "Last, First" ou Username
   last: string;

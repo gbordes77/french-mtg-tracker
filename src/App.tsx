@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Flag, ExternalLink } from "lucide-react";
 import type { EventData, FrenchPlayer, MTGEvent } from "@/lib/types";
+import { computeTotalRecord } from "@/lib/helpers";
 import Header from "@/components/Header";
 import StatusPill from "@/components/StatusPill";
 import StatBlock from "@/components/StatBlock";
@@ -11,6 +12,7 @@ import MethodologyFooter from "@/components/MethodologyFooter";
 import MarketingHero from "@/components/MarketingHero";
 import LiveMatchesBlock from "@/components/LiveMatchesBlock";
 import ExportCsvButton from "@/components/ExportCsvButton";
+import AmpRaceBlock from "@/components/AmpRaceBlock";
 import PerformanceCard from "@/components/PerformanceCard";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 
@@ -75,7 +77,10 @@ export default function App() {
 
   const stats = useMemo(() => {
     if (!event) return { total: 0, active: 0, day2Lock: 0, onPaceTop8: 0 };
-    const active = players.filter((p) => p.points > 0);
+    // "Encore en vie" = pas drop ET au moins 1 match gagné
+    const active = players.filter(
+      (p) => !computeTotalRecord(p).dropped && p.points > 0,
+    );
     const day2Lock = players.filter((p) => p.points >= 12).length;
     const onPaceTop8 = players.filter(
       (p) => p.points >= 18 && event.status === "live",
@@ -244,14 +249,14 @@ export default function App() {
                   hint="Joueurs identifiés comme français dans le tournoi (cf. méthodologie en bas de page)"
                 />
                 <StatBlock
-                  label="Encore en vie"
+                  label="Toujours en course"
                   value={stats.active}
                   sub={
                     stats.total > 0
                       ? `${((stats.active / stats.total) * 100).toFixed(0)}% du roster`
                       : "—"
                   }
-                  hint="Français qui n'ont pas drop et ont au moins 1 match gagné"
+                  hint="Français qui n'ont pas dropé (= abandonné) et qui ont au moins 1 match gagné. Mis à jour automatiquement après chaque ronde (refresh toutes les 5 min depuis melee.gg)."
                 />
                 <StatBlock
                   label="Day 2 acquis"
@@ -277,6 +282,7 @@ export default function App() {
               scrapedAt={eventData.scrapedAt}
             />
           )}
+
 
           {/* ROSTER TABLE */}
           {eventLoading && (
@@ -480,6 +486,15 @@ export default function App() {
             <div id="methodo">
               <MethodologyFooter event={event} />
             </div>
+
+            {/* COURSE AUX 39+ AMP — DERNIER bloc de la page.
+                Charge public/data/amp.json (généré par scrape_amp.py).
+                Total projeté = baseline magic.gg + live AMP du PT en cours. */}
+            {!eventLoading && !eventError && players.length > 0 && event.status === "live" && (
+              <div id="amp">
+                <AmpRaceBlock players={players} />
+              </div>
+            )}
           </div>
         </div>
       </div>

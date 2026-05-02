@@ -63,11 +63,6 @@ players:
     twitter: null
     verified: true
 
-  - name: "Rayvich, Maxime"
-    twitter: null
-    verified: false
-    notes: "⚠️ À VÉRIFIER — possiblement québécois (vérifier profil melee.gg + historique RC)"
-
 # ────────────────────────────────────────────────────────────
 # Joueurs explicitement EXCLUS — Canadiens / autres francophones
 # ────────────────────────────────────────────────────────────
@@ -76,6 +71,10 @@ players:
 # semble similaire — toujours vérifier l'historique RC d'abord.
 
 excluded:
+  - name: "Rayvich, Maxime"
+    nationality: "Non-FR (à préciser)"
+    reason: "Signalé non-français par le maintainer du projet (le 2026-05-02). Précédemment listé verified:false avec note 'possiblement québécois' — déplacé en excluded sur confirmation."
+
   - name: "Offman, Noé"
     nationality: "CA (Québec)"
     reason: "RC Montréal mai 2025 + RC F2F Ottawa Fév 2024 + Team Trios Montréal Janv 2024"

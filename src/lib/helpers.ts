@@ -240,6 +240,60 @@ export const toneColors: Record<PerformanceTone, string> = {
   dropped: "var(--text-secondary)",   // dimmed
 };
 
+// ────────────────────────────────────────────────────────────
+// Décodeur des sources d'invitation au Pro Tour
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Convertit une source brute (e.g. "39+ AMP", "Deferred PT ECL", "Worlds 31 Top 8")
+ * en explication courte lisible. Retourne null si on ne reconnaît pas.
+ *
+ * Couvre les voies de qualification les plus courantes (cf. Wizards
+ * Premier Tournament Invitation Policy).
+ */
+export function explainSource(source: string | null | undefined): string | null {
+  if (!source) return null;
+  const s = source.trim();
+
+  if (/^39\+\s*amp$/i.test(s))
+    return "Cumulé 39+ AMP sur les 3 derniers PT (voie alternative)";
+
+  // Deferred PT XXX = invitation reportée d'un PT précédent
+  const deferredMatch = s.match(/^deferred\s+pt\s+(.+)$/i);
+  if (deferredMatch)
+    return `Invitation au PT ${deferredMatch[1]} reportée sur ce PT-ci`;
+
+  // Worlds N Top 8
+  const worldsMatch = s.match(/^worlds\s+(\d+)\s+top\s+(\d+)$/i);
+  if (worldsMatch)
+    return `Top ${worldsMatch[2]} du Magic World Championship ${worldsMatch[1]}`;
+
+  // Spotlight + ville
+  const spotlightMatch = s.match(/^spotlight\s+(.+)$/i);
+  if (spotlightMatch)
+    return `Top finish à un Magic Spotlight Series (${spotlightMatch[1]})`;
+
+  if (/mtgo\s+champions\s+showcase/i.test(s))
+    return "Top finish au tournoi MTGO Champions Showcase";
+
+  // PT XXX 30+ MP (re-qualif via 10-6 sur PT précédent)
+  const ptMpMatch = s.match(/^pt\s+(\S+)\s+(\d+)\+\s*mp$/i);
+  if (ptMpMatch)
+    return `${ptMpMatch[2]}+ match points (${(parseInt(ptMpMatch[2]) / 3) | 0}+ victoires) au PT ${ptMpMatch[1]} précédent — re-qualif directe`;
+
+  // RC EMEA, RC NA etc.
+  const rcMatch = s.match(/^rc\s+(emea|na|\w+)$/i);
+  if (rcMatch)
+    return `Top finish à un Regional Championship ${rcMatch[1].toUpperCase()}`;
+
+  if (/^pt\s+top\s+8$/i.test(s))
+    return "Top 8 d'un Pro Tour précédent — qualif auto";
+
+  if (/à\s*v[ée]rifier/i.test(s)) return null; // placeholder, ne pas expliquer
+
+  return null;
+}
+
 export function projectionColor(
   status: Projection["status"],
 ): string {
