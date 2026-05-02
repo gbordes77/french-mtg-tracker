@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Flag } from "lucide-react";
+import { Flag, ExternalLink } from "lucide-react";
 import type { EventData, FrenchPlayer, MTGEvent } from "@/lib/types";
 import Header from "@/components/Header";
 import StatusPill from "@/components/StatusPill";
@@ -152,6 +152,78 @@ export default function App() {
                 <span>{event.location.toUpperCase()}</span>
                 <span>{event.dates.toUpperCase()}</span>
                 <span>{event.formats.toUpperCase()}</span>
+              </div>
+
+              {/* Liens externes vers les sources officielles */}
+              <div className="mt-5 flex items-center gap-3 flex-wrap">
+                {event.sourceUrl && (
+                  <a
+                    href={event.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 transition-all"
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "var(--radius-lg)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      background: "rgba(14, 104, 171, 0.10)",
+                      color: "var(--mana-blue)",
+                      border: "1px solid rgba(14, 104, 171, 0.25)",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background =
+                        "rgba(14, 104, 171, 0.18)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background =
+                        "rgba(14, 104, 171, 0.10)")
+                    }
+                    aria-label={`Standings officiels sur magic.gg pour ${event.name}`}
+                  >
+                    <span>Standings</span>
+                    <span className="font-mono" style={{ opacity: 0.85 }}>
+                      magic.gg
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                  </a>
+                )}
+                {event.meleeId && (
+                  <a
+                    href={`https://melee.gg/Tournament/View/${event.meleeId}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 transition-all"
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "var(--radius-lg)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      background: "rgba(0, 115, 62, 0.10)",
+                      color: "var(--mana-green)",
+                      border: "1px solid rgba(0, 115, 62, 0.25)",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background =
+                        "rgba(0, 115, 62, 0.18)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background =
+                        "rgba(0, 115, 62, 0.10)")
+                    }
+                    aria-label={`Tournoi melee.gg #${event.meleeId} pour ${event.name}`}
+                  >
+                    <span>Tournoi</span>
+                    <span className="font-mono" style={{ opacity: 0.85 }}>
+                      melee.gg
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                  </a>
+                )}
               </div>
             </div>
 
