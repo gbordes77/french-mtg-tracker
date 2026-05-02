@@ -53,6 +53,19 @@ body {
     var(--surface-default);
 }
 
+/* En light, radial subtil bleu-violet pour matcher la profondeur ManaTuner */
+[data-theme="light"] body,
+:root:not([data-theme="dark"]) body {
+  background:
+    radial-gradient(ellipse 100% 60% at 80% -10%,
+      rgba(106, 27, 154, 0.06),
+      transparent 50%),
+    radial-gradient(ellipse 80% 50% at 20% 0%,
+      rgba(14, 104, 171, 0.05),
+      transparent 60%),
+    var(--surface-default);
+}
+
 /* Tabular numerals pour toutes les valeurs chiffrées (data, scores, OMW) */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
@@ -92,9 +105,9 @@ body {
 }
 
 /* ============================================================
-   Hero title FR — variant du .ds-hero-title de ManaTuner.
-   On garde le gradient WUBRG mais on ajoute un accent rouge
-   final pour la signature FR (gold→blue→purple→red→FR-red).
+   Hero title FR — utilise le gradient canon WUBRG ManaTuner.
+   Identique à .ds-hero-title (gold→blue→purple→red→green)
+   pour une cohérence visuelle iso entre les deux sites.
    ============================================================ */
 
 .fr-hero-title {
@@ -102,14 +115,7 @@ body {
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: var(--ls-display);
-  background: linear-gradient(
-    135deg,
-    #E9B54C 0%,    /* mana-multicolor (gold) */
-    #0E68AB 25%,   /* mana-blue */
-    #9c27b0 50%,   /* purple intermédiaire */
-    #D3202A 75%,   /* mana-red */
-    var(--fr-red) 100%
-  );
+  background: var(--gradient-hero-wubrg);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

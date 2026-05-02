@@ -8,6 +8,7 @@ import EventCard from "@/components/EventCard";
 import PerformanceRow from "@/components/PerformanceRow";
 import ThresholdsBlock from "@/components/ThresholdsBlock";
 import MethodologyFooter from "@/components/MethodologyFooter";
+import MarketingHero from "@/components/MarketingHero";
 
 export default function App() {
   const [events, setEvents] = useState<MTGEvent[]>([]);
@@ -92,8 +93,11 @@ export default function App() {
       <div className="grain min-h-screen relative">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-6 py-10 relative z-10">
-          {/* HERO */}
+        {/* MARKETING HERO — calque structure ManaTuner pour cohérence inter-sites */}
+        <MarketingHero />
+
+        <div id="suivi" className="max-w-7xl mx-auto px-6 py-10 relative z-10">
+          {/* DASHBOARD HERO — event en cours + stats FR */}
           <div className="grid grid-cols-12 gap-6 mb-12">
             <div className="col-span-12 lg:col-span-8">
               <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -164,7 +168,7 @@ export default function App() {
           </div>
 
           {/* EVENT SELECTOR */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+          <div id="events" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
             {events.map((e) => (
               <EventCard
                 key={e.slug}
@@ -295,8 +299,12 @@ export default function App() {
             className="mt-16 pt-8"
             style={{ borderTop: "1px solid var(--glass-border)" }}
           >
-            <ThresholdsBlock />
-            <MethodologyFooter event={event} />
+            <div id="seuils">
+              <ThresholdsBlock />
+            </div>
+            <div id="methodo">
+              <MethodologyFooter event={event} />
+            </div>
           </div>
         </div>
       </div>

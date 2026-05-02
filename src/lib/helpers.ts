@@ -153,8 +153,8 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   if (a.includes("izzet")) {
     return {
       bg: "rgba(14, 104, 171, 0.12)",
-      border: "#0E68AB",
-      fg: "#4A9EE8",
+      border: "var(--mana-blue)",
+      fg: "var(--mana-blue)",
       manaCodes: ["u", "r"],
     };
   }
@@ -163,8 +163,8 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   if (a.includes("mono-green") || a.includes("mono green")) {
     return {
       bg: "rgba(0, 115, 62, 0.15)",
-      border: "#00733E",
-      fg: "#4CAF50",
+      border: "var(--mana-green)",
+      fg: "var(--mana-green)",
       manaCodes: ["g"],
     };
   }
@@ -173,8 +173,8 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   if (a.includes("simic") || a.includes("bant rhythm")) {
     return {
       bg: "rgba(0, 115, 62, 0.12)",
-      border: "#00733E",
-      fg: "#4CAF50",
+      border: "var(--mana-green)",
+      fg: "var(--mana-green)",
       manaCodes: ["g", "u"],
     };
   }
@@ -182,9 +182,9 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   // Bant (W+U+G)
   if (a.includes("bant")) {
     return {
-      bg: "rgba(233, 181, 76, 0.12)",
-      border: "#E9B54C",
-      fg: "#FFD700",
+      bg: "rgba(233, 181, 76, 0.18)",
+      border: "var(--mana-multicolor)",
+      fg: "var(--mana-multicolor)",
       manaCodes: ["w", "u", "g"],
     };
   }
@@ -192,9 +192,9 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   // Jeskai (W+U+R)
   if (a.includes("jeskai")) {
     return {
-      bg: "rgba(233, 181, 76, 0.10)",
-      border: "#E9B54C",
-      fg: "#FFD700",
+      bg: "rgba(233, 181, 76, 0.16)",
+      border: "var(--mana-multicolor)",
+      fg: "var(--mana-multicolor)",
       manaCodes: ["u", "r", "w"],
     };
   }
@@ -202,42 +202,42 @@ export function archetypeColor(archetype: string): ArchetypeStyle {
   // Sultai (B+U+G) ou variantes Reanimator/Dimir
   if (a.includes("sultai") || a.includes("reanimator")) {
     return {
-      bg: "rgba(21, 11, 0, 0.30)",
-      border: "#3D3D3D",
-      fg: "#9E9E9E",
+      bg: "rgba(21, 11, 0, 0.10)",
+      border: "var(--mana-colorless)",
+      fg: "var(--text-primary)",
       manaCodes: ["b", "u", "g"],
     };
   }
 
   if (a.includes("dimir")) {
     return {
-      bg: "rgba(21, 11, 0, 0.25)",
-      border: "#3D3D3D",
-      fg: "#9E9E9E",
+      bg: "rgba(21, 11, 0, 0.08)",
+      border: "var(--mana-colorless)",
+      fg: "var(--text-primary)",
       manaCodes: ["u", "b"],
     };
   }
 
   // Fallback colorless
   return {
-    bg: "rgba(203, 197, 192, 0.08)",
-    border: "#9E9E9E",
-    fg: "#CBC5C0",
+    bg: "rgba(203, 197, 192, 0.15)",
+    border: "var(--mana-colorless)",
+    fg: "var(--text-secondary)",
     manaCodes: ["c"],
   };
 }
 
 // ────────────────────────────────────────────────────────────
-// Style de tone — palette mana ManaTuner (dark mode values)
+// Style de tone — palette mana ManaTuner (auto-adaptive light/dark)
 // ────────────────────────────────────────────────────────────
 
 export const toneColors: Record<PerformanceTone, string> = {
-  elite:   "#FFD700",   // mana-multicolor dark — gold premium
-  strong:  "#4CAF50",   // mana-green dark
-  ok:      "#4A9EE8",   // mana-blue dark
-  bubble:  "#E9B54C",   // mana-multicolor light — warning
-  weak:    "#9E9E9E",   // mana-colorless dark
-  dropped: "#3D3D3D",   // mana-black dark
+  elite:   "var(--mana-multicolor)",  // gold premium
+  strong:  "var(--mana-green)",       // succès
+  ok:      "var(--mana-blue)",        // info
+  bubble:  "var(--mana-multicolor)",  // warning (mêmes valeurs que elite — diff par opacité au consumer)
+  weak:    "var(--mana-colorless)",   // neutre
+  dropped: "var(--text-secondary)",   // dimmed
 };
 
 export function projectionColor(
@@ -245,10 +245,10 @@ export function projectionColor(
 ): string {
   switch (status) {
     case "acquired":
-      return "#4CAF50";   // mana-green dark
+      return "var(--mana-green)";
     case "achievable":
-      return "#F5F5F5";   // text-primary dark
+      return "var(--text-primary)";
     case "impossible":
-      return "#666666";   // muted
+      return "var(--text-secondary)";
   }
 }
