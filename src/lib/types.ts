@@ -101,6 +101,8 @@ export interface EventData {
   frenchPlayers: FrenchPlayer[];
   liveRound?: LiveRound;       // ronde actuellement en cours (si applicable)
   liveMatches?: LiveMatch[];   // matchs avec au moins un FR sur la ronde en cours
+  previousRound?: LiveRound;   // dernière ronde complétée DIFFÉRENTE de liveRound (rétrospective)
+  previousMatches?: LiveMatch[]; // matchs FR sur la ronde précédente (à afficher sans spoiler)
   fieldArchetypes?: Record<string, number>;  // archetype name → count global, dédupé par TeamId
 }
 

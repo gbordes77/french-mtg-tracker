@@ -307,6 +307,28 @@ def pick_in_progress_round(rounds: list[dict[str, Any]]) -> dict[str, Any] | Non
     return completed[-1] if completed else None
 
 
+def pick_previous_completed_round(
+    rounds: list[dict[str, Any]],
+    live_round: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Retourne la dernière ronde complétée DIFFÉRENTE de live_round.
+
+    Use case : quand live_round = ronde en cours (R9 en train de jouer), on veut
+    afficher en plus la R8 finalisée juste avant, sans protection spoiler.
+    Si live_round est déjà la dernière complétée (entre 2 rondes), on retourne
+    None pour éviter le doublon.
+    """
+    if not live_round:
+        return None
+    completed = [r for r in rounds if r["completed"] and r["id"] != live_round["id"]]
+    if not completed:
+        return None
+    # Si live_round n'est pas en progress (= il est lui-même completed), pas de précédent
+    if live_round["completed"]:
+        return None
+    return completed[-1]
+
+
 def filter_french_pairings(
     pairings: list[dict[str, Any]],
     config: dict[str, Any],
@@ -611,6 +633,8 @@ def build_event_data(
     existing: dict[str, Any] | None,
     live_round: dict[str, Any] | None = None,
     live_matches: list[dict[str, Any]] | None = None,
+    previous_round: dict[str, Any] | None = None,
+    previous_matches: list[dict[str, Any]] | None = None,
     field_archetypes: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     """Construit le JSON final compatible avec le frontend."""
@@ -682,6 +706,14 @@ def build_event_data(
             "started": live_round.get("started", False),
         }
         out["liveMatches"] = live_matches
+    if previous_round and previous_matches is not None:
+        prev_num = re.search(r"\d+", previous_round.get("name", ""))
+        out["previousRound"] = {
+            "name": previous_round["name"],
+            "number": int(prev_num.group(0)) if prev_num else None,
+            "started": True,
+        }
+        out["previousMatches"] = previous_matches
     if field_archetypes:
         out["fieldArchetypes"] = field_archetypes
     return out
@@ -787,6 +819,8 @@ def main() -> int:
         live_matches: list[dict[str, Any]] = []
         decklist_index: dict[str, str] = {}
         field_archetypes: dict[str, int] = {}
+        previous_round = None
+        previous_matches: list[dict[str, Any]] = []
         if live_round:
             try:
                 pairings = fetch_pairings(client, tournament_id, live_round["id"])
@@ -808,6 +842,26 @@ def main() -> int:
                 logger.warning("Pairings indisponibles: %s", e)
                 live_round = None
 
+        # Si live_round est en progress (started && !completed), on récupère
+        # AUSSI la dernière ronde complétée différente — affichée sans spoiler
+        # comme bloc rétrospectif "Round X-1 résultats".
+        previous_round = pick_previous_completed_round(meta["rounds"], live_round)
+        if previous_round:
+            try:
+                prev_pairings = fetch_pairings(client, tournament_id, previous_round["id"])
+                logger.info("%d matchs sur ronde précédente %s (sans spoiler)",
+                          len(prev_pairings), previous_round["name"])
+                # Enrichit l'index decklist au passage (les FR jouent souvent les mêmes decks)
+                prev_index = build_decklist_index(prev_pairings)
+                for k, v in prev_index.items():
+                    decklist_index.setdefault(k, v)
+                previous_matches = filter_french_pairings(prev_pairings, config)
+                logger.info("%d matchs FR sur la ronde précédente",
+                          len(previous_matches))
+            except (httpx.HTTPError, ParseError) as e:
+                logger.warning("Pairings ronde précédente indisponibles: %s", e)
+                previous_round = None
+
     # 5. Identification FR (standings) avec injection des decklist IDs
     french = identify_french(standings, config, decklist_index)
     logger.info("%d Français identifiés (standings)", len(french))
@@ -817,6 +871,7 @@ def main() -> int:
         args.slug, meta, round_info, args.total_rounds,
         standings, french, existing,
         live_round=live_round, live_matches=live_matches,
+        previous_round=previous_round, previous_matches=previous_matches,
         field_archetypes=field_archetypes if field_archetypes else None,
     )
 

@@ -17,27 +17,43 @@ export interface TotalRecord {
 }
 
 export function computeTotalRecord(player: FrenchPlayer): TotalRecord {
+  // On détecte d'abord le drop (info qu'on ne peut pas avoir depuis matchRecord seul,
+  // car matchRecord = "5-3-0" même si le joueur a drop après).
   const parts = [
     player.draftD1,
     player.standardD1,
     player.draftD2,
     player.standardD2,
   ];
-  let wins = 0;
-  let losses = 0;
   let dropped = false;
-
   for (const part of parts) {
-    if (!part) continue;
     if (part === "DROP") {
       dropped = true;
-      continue;
+      break;
     }
+  }
+
+  // Source primaire : matchRecord live de melee (format "W-L-D"), TOUJOURS
+  // à jour avec les rondes finalisées. Les splits Draft/Standard sont des
+  // valeurs hand-curated qui peuvent être figées au moment du seed JSON,
+  // donc on les utilise uniquement en fallback.
+  if (player.matchRecord) {
+    const segs = player.matchRecord.split("-").map((s) => parseInt(s, 10));
+    const [w, l] = segs;
+    if (!isNaN(w) && !isNaN(l)) {
+      return { wins: w, losses: l, dropped };
+    }
+  }
+
+  // Fallback : recalcul depuis les splits (legacy / pas de matchRecord)
+  let wins = 0;
+  let losses = 0;
+  for (const part of parts) {
+    if (!part || part === "DROP") continue;
     const [w, l] = part.split("-").map(Number);
     if (!isNaN(w)) wins += w;
     if (!isNaN(l)) losses += l;
   }
-
   return { wins, losses, dropped };
 }
 

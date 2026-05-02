@@ -72,6 +72,19 @@ export default function App() {
     [events, selectedSlug],
   );
 
+  // event.currentRound vient d'events.json (catalogue statique, hardcodé au
+  // moment de la création de l'event). Le scraper écrit la vraie ronde
+  // courante dans eventData.round à chaque refresh */5 min. liveEvent
+  // injecte cette valeur fraîche pour que les projections, tooltips et
+  // labels reflètent la réalité live.
+  const liveEvent = useMemo(() => {
+    if (!event) return event;
+    return {
+      ...event,
+      currentRound: eventData?.round ?? event.currentRound,
+    };
+  }, [event, eventData?.round]);
+
   const players: FrenchPlayer[] = eventData?.frenchPlayers ?? EMPTY_PLAYERS;
 
   const stats = useMemo(() => {
@@ -288,11 +301,24 @@ export default function App() {
             </div>
           </div>
 
-          {/* LIVE MATCHES — affiché si la ronde en cours a des matchs FR */}
+          {/* LIVE MATCHES — ronde en cours, mode spoiler activé par défaut */}
           {!eventLoading && !eventError && eventData?.liveRound && eventData?.liveMatches && eventData.liveMatches.length > 0 && (
             <LiveMatchesBlock
               liveRound={eventData.liveRound}
               matches={eventData.liveMatches}
+              scrapedAt={eventData.scrapedAt}
+            />
+          )}
+
+          {/* RONDE PRÉCÉDENTE — bloc rétrospectif AVEC spoiler aussi.
+              Même les rondes finies ne sont pas encore diffusées sur le
+              stream officiel, donc on garde le spoiler actif. Le state est
+              persisté indépendamment par numéro de ronde dans localStorage,
+              donc R9 et R10 ont leur propre toggle. */}
+          {!eventLoading && !eventError && eventData?.previousRound && eventData?.previousMatches && eventData.previousMatches.length > 0 && (
+            <LiveMatchesBlock
+              liveRound={eventData.previousRound}
+              matches={eventData.previousMatches}
               scrapedAt={eventData.scrapedAt}
             />
           )}
@@ -338,7 +364,7 @@ export default function App() {
                 >
                   <span className="inline-flex items-center gap-2">
                     <Flag className="w-3 h-3" />
-                    Mise à jour : R{event.currentRound}
+                    Mise à jour : R{eventData?.round ?? event.currentRound}
                     {event.status === "live" && " · auto-refresh 5 min"}
                   </span>
                   {eventData && (
@@ -353,7 +379,7 @@ export default function App() {
                     <PerformanceCard
                       key={`${p.last}|${p.first}|${p.rank}`}
                       player={p}
-                      event={event}
+                      event={liveEvent ?? event}
                     />
                   ))}
                 </div>
@@ -362,7 +388,7 @@ export default function App() {
                 <table className="w-full min-w-[1100px]">
                   <caption className="sr-only">
                     Performances des joueurs français à {event.name}, ronde{" "}
-                    {event.currentRound} sur {event.totalRounds}.
+                    {eventData?.round ?? event.currentRound} sur {event.totalRounds}.
                   </caption>
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
@@ -437,7 +463,7 @@ export default function App() {
                       <PerformanceRow
                         key={`${p.last}|${p.first}|${p.rank}`}
                         player={p}
-                        event={event}
+                        event={liveEvent ?? event}
                         isFirst={i === 0}
                       />
                     ))}

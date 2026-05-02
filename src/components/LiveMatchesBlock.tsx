@@ -10,6 +10,13 @@ interface Props {
   liveRound: LiveRound;
   matches: LiveMatch[];
   scrapedAt: string;
+  /**
+   * Si false, désactive complètement le mode spoiler : pairings ET résultats
+   * sont visibles d'emblée, pas de toggle, pas de bandeau d'avertissement.
+   * Utilisé pour le bloc rétrospectif "Round X-1" affiché sous le bloc
+   * spoiler-protected de la ronde en cours.
+   */
+  spoilerProtected?: boolean;
 }
 
 /**
@@ -19,26 +26,38 @@ interface Props {
  * Données live melee.gg : table, archetype (auto via decklist), score
  * en games (0-0, 1-0, 2-1...), status (en cours / terminé), feature match.
  */
-export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Props) {
+export default function LiveMatchesBlock({
+  liveRound,
+  matches,
+  scrapedAt,
+  spoilerProtected = true,
+}: Props) {
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   // Spoiler par ronde : la clé inclut le numéro pour reset à chaque ronde.
+  // Si spoilerProtected=false, on force revealed=true et on ignore le localStorage.
   const spoilerKey = `${SPOILER_KEY_PREFIX}-${liveRound.number ?? liveRound.name}`;
   const [revealed, setRevealed] = useState<boolean>(() => {
+    if (!spoilerProtected) return true;
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(spoilerKey) === "true";
   });
   useEffect(() => {
+    if (!spoilerProtected) return;
     if (typeof window !== "undefined") {
       window.localStorage.setItem(spoilerKey, revealed ? "true" : "false");
     }
-  }, [revealed, spoilerKey]);
+  }, [revealed, spoilerKey, spoilerProtected]);
   // Reset l'état si on change de ronde (nouveau spoilerKey)
   useEffect(() => {
+    if (!spoilerProtected) {
+      setRevealed(true);
+      return;
+    }
     if (typeof window === "undefined") return;
     const saved = window.localStorage.getItem(spoilerKey);
     setRevealed(saved === "true");
-  }, [spoilerKey]);
+  }, [spoilerKey, spoilerProtected]);
 
   if (!matches || matches.length === 0) return null;
 
@@ -83,17 +102,19 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
           </span>
           <span>·</span>
           <span>refresh {updatedAgo}</span>
-          <span>·</span>
-          <button
-            type="button"
-            onClick={() => setRevealed((r) => !r)}
-            className="inline-flex items-center gap-1.5 transition-all"
-            aria-pressed={revealed}
-            title={
-              revealed
-                ? "Cacher à nouveau les scores et statuts"
-                : "⚠️ Spoiler — afficher les scores et statuts"
-            }
+          {spoilerProtected && (
+            <>
+              <span>·</span>
+              <button
+                type="button"
+                onClick={() => setRevealed((r) => !r)}
+                className="inline-flex items-center gap-1.5 transition-all"
+                aria-pressed={revealed}
+                title={
+                  revealed
+                    ? "Cacher à nouveau les scores et statuts"
+                    : "⚠️ Spoiler — afficher les scores et statuts"
+                }
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "11px",
@@ -126,23 +147,25 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
               }
             }}
           >
-            {revealed ? (
-              <>
-                <EyeOff className="w-3 h-3" aria-hidden="true" />
-                Cacher les résultats
-              </>
-            ) : (
-              <>
-                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                Voir les résultats
-              </>
-            )}
-          </button>
+                {revealed ? (
+                  <>
+                    <EyeOff className="w-3 h-3" aria-hidden="true" />
+                    Cacher les résultats
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                    Voir les résultats
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* Banner spoiler quand caché — explique l'état */}
-      {!revealed && (
+      {spoilerProtected && !revealed && (
         <div
           className="mb-3 p-3 flex items-center gap-2 flex-wrap"
           style={{
