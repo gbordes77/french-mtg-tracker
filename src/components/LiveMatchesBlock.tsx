@@ -1,7 +1,10 @@
-import { Radio, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Radio, Star, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import type { LiveMatch, LiveRound } from "@/lib/types";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import ArchetypeChip from "./ArchetypeChip";
+
+const SPOILER_KEY_PREFIX = "frmtg-spoiler-revealed";
 
 interface Props {
   liveRound: LiveRound;
@@ -18,6 +21,24 @@ interface Props {
  */
 export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Props) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+
+  // Spoiler par ronde : la clé inclut le numéro pour reset à chaque ronde.
+  const spoilerKey = `${SPOILER_KEY_PREFIX}-${liveRound.number ?? liveRound.name}`;
+  const [revealed, setRevealed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(spoilerKey) === "true";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(spoilerKey, revealed ? "true" : "false");
+    }
+  }, [revealed, spoilerKey]);
+  // Reset l'état si on change de ronde (nouveau spoilerKey)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem(spoilerKey);
+    setRevealed(saved === "true");
+  }, [spoilerKey]);
 
   if (!matches || matches.length === 0) return null;
 
@@ -54,19 +75,109 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
           style={{ fontSize: "11px", color: "var(--text-secondary)" }}
         >
           <span>
-            {allFinished
-              ? `${finished} matchs terminés`
-              : `${inProgress} en cours · ${finished} terminés`}
+            {revealed
+              ? allFinished
+                ? `${finished} matchs terminés`
+                : `${inProgress} en cours · ${finished} terminés`
+              : `${matches.length} match${matches.length > 1 ? "s" : ""} FR`}
           </span>
           <span>·</span>
           <span>refresh {updatedAgo}</span>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => setRevealed((r) => !r)}
+            className="inline-flex items-center gap-1.5 transition-all"
+            aria-pressed={revealed}
+            title={
+              revealed
+                ? "Cacher à nouveau les scores et statuts"
+                : "⚠️ Spoiler — afficher les scores et statuts"
+            }
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: revealed ? "var(--text-secondary)" : "#fff",
+              background: revealed ? "transparent" : "var(--mana-red)",
+              border: revealed
+                ? "1px solid var(--glass-border)"
+                : "1px solid var(--mana-red)",
+              padding: "5px 12px",
+              borderRadius: "var(--radius-lg)",
+              cursor: "pointer",
+              letterSpacing: "0.02em",
+            }}
+            onMouseEnter={(e) => {
+              if (revealed) {
+                (e.currentTarget as HTMLElement).style.color =
+                  "var(--text-primary)";
+              } else {
+                (e.currentTarget as HTMLElement).style.filter =
+                  "brightness(1.1)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (revealed) {
+                (e.currentTarget as HTMLElement).style.color =
+                  "var(--text-secondary)";
+              } else {
+                (e.currentTarget as HTMLElement).style.filter = "";
+              }
+            }}
+          >
+            {revealed ? (
+              <>
+                <EyeOff className="w-3 h-3" aria-hidden="true" />
+                Cacher les résultats
+              </>
+            ) : (
+              <>
+                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                Voir les résultats
+              </>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Banner spoiler quand caché — explique l'état */}
+      {!revealed && (
+        <div
+          className="mb-3 p-3 flex items-center gap-2 flex-wrap"
+          style={{
+            border: "1px dashed var(--mana-red)",
+            borderRadius: "var(--radius-lg)",
+            background: "rgba(211,32,42,0.04)",
+            fontSize: "12px",
+            color: "var(--text-secondary)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          <AlertTriangle
+            className="w-4 h-4 shrink-0"
+            style={{ color: "var(--mana-red)" }}
+            aria-hidden="true"
+          />
+          <span>
+            <strong style={{ color: "var(--text-primary)" }}>
+              Mode spoiler
+            </strong>{" "}
+            : les pairings des Français sont visibles, mais les scores et
+            statuts sont cachés. Cliquer sur "Voir les résultats" en haut à
+            droite pour révéler.
+          </span>
+        </div>
+      )}
 
       {isMobile ? (
         <div className="flex flex-col gap-3">
           {matches.map((m, i) => (
-            <LiveMatchCard key={`${m.table}-${m.fr.name}-${i}`} match={m} />
+            <LiveMatchCard
+              key={`${m.table}-${m.fr.name}-${i}`}
+              match={m}
+              revealed={revealed}
+            />
           ))}
         </div>
       ) : (
@@ -101,7 +212,11 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
           </thead>
           <tbody>
             {matches.map((m, i) => (
-              <LiveMatchRow key={`${m.table}-${m.fr.name}-${i}`} match={m} />
+              <LiveMatchRow
+                key={`${m.table}-${m.fr.name}-${i}`}
+                match={m}
+                revealed={revealed}
+              />
             ))}
           </tbody>
         </table>
@@ -122,7 +237,13 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
  *   MJ_23                          1
  *   [Mono-Green Landfall ↗]
  */
-function LiveMatchCard({ match: m }: { match: LiveMatch }) {
+function LiveMatchCard({
+  match: m,
+  revealed,
+}: {
+  match: LiveMatch;
+  revealed: boolean;
+}) {
   const won = m.fr.gameWins > m.opponent.gameWins;
   const lost = m.fr.gameWins < m.opponent.gameWins;
   const tied = m.fr.gameWins === m.opponent.gameWins && m.hasResult;
@@ -159,7 +280,11 @@ function LiveMatchCard({ match: m }: { match: LiveMatch }) {
           )}
           Table {m.table}
         </div>
-        <StatusBadge hasResult={m.hasResult} won={won} lost={lost} tied={tied} />
+        {revealed ? (
+          <StatusBadge hasResult={m.hasResult} won={won} lost={lost} tied={tied} />
+        ) : (
+          <HiddenPlaceholder label="?" />
+        )}
       </div>
 
       {/* FR player line */}
@@ -193,10 +318,10 @@ function LiveMatchCard({ match: m }: { match: LiveMatch }) {
           style={{
             fontSize: "1.5rem",
             fontWeight: 700,
-            color: frScoreColor,
+            color: revealed ? frScoreColor : "var(--text-secondary)",
           }}
         >
-          {m.fr.gameWins}
+          {revealed ? m.fr.gameWins : "?"}
         </div>
       </div>
       <div className="mb-3">
@@ -263,7 +388,7 @@ function LiveMatchCard({ match: m }: { match: LiveMatch }) {
             color: "var(--text-secondary)",
           }}
         >
-          {m.opponent.gameWins}
+          {revealed ? m.opponent.gameWins : "?"}
         </div>
       </div>
       <ArchetypeRef
@@ -274,7 +399,13 @@ function LiveMatchCard({ match: m }: { match: LiveMatch }) {
   );
 }
 
-function LiveMatchRow({ match: m }: { match: LiveMatch }) {
+function LiveMatchRow({
+  match: m,
+  revealed,
+}: {
+  match: LiveMatch;
+  revealed: boolean;
+}) {
   const won = m.fr.gameWins > m.opponent.gameWins;
   const lost = m.fr.gameWins < m.opponent.gameWins;
   const tied = m.fr.gameWins === m.opponent.gameWins && m.hasResult;
@@ -315,7 +446,11 @@ function LiveMatchRow({ match: m }: { match: LiveMatch }) {
         </span>
       </td>
       <td style={{ padding: "10px 12px" }}>
-        <StatusBadge hasResult={m.hasResult} won={won} lost={lost} tied={tied} />
+        {revealed ? (
+          <StatusBadge hasResult={m.hasResult} won={won} lost={lost} tied={tied} />
+        ) : (
+          <HiddenPlaceholder label="—" />
+        )}
       </td>
       <td
         style={{
@@ -336,10 +471,10 @@ function LiveMatchRow({ match: m }: { match: LiveMatch }) {
           padding: "10px 12px",
           fontSize: "1rem",
           fontWeight: 700,
-          color: scoreColor,
+          color: revealed ? scoreColor : "var(--text-secondary)",
         }}
       >
-        {m.fr.gameWins}–{m.opponent.gameWins}
+        {revealed ? `${m.fr.gameWins}–${m.opponent.gameWins}` : "?"}
       </td>
       <td
         style={{
@@ -365,6 +500,31 @@ function LiveMatchRow({ match: m }: { match: LiveMatch }) {
         />
       </td>
     </tr>
+  );
+}
+
+/**
+ * Placeholder neutre quand les résultats sont cachés (mode spoiler).
+ * Remplace le StatusBadge et le score par un "?" ou "—" discret.
+ */
+function HiddenPlaceholder({ label }: { label: string }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center font-mono"
+      style={{
+        fontSize: "11px",
+        color: "var(--text-secondary)",
+        background: "var(--glass-secondary)",
+        border: "1px dashed var(--glass-border)",
+        padding: "3px 10px",
+        borderRadius: "var(--radius-full)",
+        opacity: 0.7,
+        letterSpacing: "0.1em",
+      }}
+      aria-label="Résultat caché — mode spoiler"
+    >
+      {label}
+    </span>
   );
 }
 
