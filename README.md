@@ -3,8 +3,7 @@
 > Suivi en temps réel des performances des joueurs français aux Pro Tours, Worlds et événements compétitifs Magic: The Gathering majeurs.
 
 🌐 **Live** : [french-mtg-tracker.vercel.app](https://french-mtg-tracker.vercel.app)
-🐦 **Suivez** : [@MTGTools_FR](https://twitter.com/) sur X
-💬 **Communauté** : Discord MTGTools
+💬 **Contact / signaler un manque** : DM Discord à [GuillaumeB](https://discord.com/users/310382567323074561)
 
 ## Pourquoi
 

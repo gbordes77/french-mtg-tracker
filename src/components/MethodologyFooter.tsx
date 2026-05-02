@@ -71,7 +71,7 @@ export default function MethodologyFooter({ event }: Props) {
           borderTop: "1px solid var(--glass-border)",
         }}
       >
-        <span>FRENCH MTG TRACKER · MTGTOOLS · 2026</span>
+        <span>FRENCH MTG TRACKER · 2026</span>
         <span>Indépendant · Non affilié à Wizards of the Coast</span>
       </div>
     </>

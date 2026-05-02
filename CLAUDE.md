@@ -17,7 +17,7 @@ Tracker en quasi-temps réel les performances des **joueurs français** aux év�
 
 ## Pourquoi ce projet existe
 
-Aucun site existant ne suit les Français exclusivement. magic.gg liste les standings globaux, mtgtop8 archive les decklists, mais personne ne synthétise « combien de Français en course pour Top 8 / requalif sur ce PT en cours ». Ce site comble ce trou pour la communauté MTGTools FR (Discord + X/Twitter).
+Aucun site existant ne suit les Français exclusivement. magic.gg liste les standings globaux, mtgtop8 archive les decklists, mais personne ne synthétise « combien de Français en course pour Top 8 / requalif sur ce PT en cours ». Ce site comble ce trou pour la communauté MTG FR (Discord + X/Twitter).
 
 ## Architecture
 
@@ -88,7 +88,7 @@ C'est le fichier le plus important du projet. Il contient :
 3. Pour chaque candidat, vérifier sur :
    - **mtgtop8.com** : le drapeau pays sur la page joueur. Si absent, regarder son historique RC (uniquement EMEA Antwerp/Lyon/Turin = probable FR ; Toronto/Ottawa/Montréal = Canadien)
    - **Twitter/X** : @MTGFrance, @JEDepraz, @TerredeMagic relaient les Français présents
-   - **Discord MTGTools** : confirmation communautaire si profil incertain
+   - **Discord communauté MTG FR** : confirmation communautaire si profil incertain
 4. Ajouter dans `players:` ou dans `excluded:` avec justification
 5. Commit avec message : `chore: update FR roster for {event-slug}`
 
