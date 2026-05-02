@@ -1,0 +1,79 @@
+name: Scrape Pro Tour standings
+
+on:
+  # Cron toutes les 30 min — désactivé par défaut, à activer pendant un PT actif
+  schedule:
+    - cron: "*/30 * * * *"
+
+  # Déclenchement manuel via gh workflow run scrape.yml
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Slug de l'événement (ex: pt-secrets-of-strixhaven)"
+        required: true
+        default: "pt-secrets-of-strixhaven"
+      round:
+        description: "Ronde précise (vide = auto)"
+        required: false
+
+permissions:
+  contents: write  # nécessaire pour push automatique
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "scrapers/requirements.txt"
+
+      - name: Install dependencies
+        run: pip install -r scrapers/requirements.txt
+
+      - name: Determine active events
+        id: events
+        run: |
+          # Lit public/data/events.json et ne garde que les events status=live
+          python3 -c "
+          import json, os
+          events = json.load(open('public/data/events.json'))
+          live = [e['slug'] for e in events if e['status'] == 'live']
+          slug_input = '${{ inputs.slug }}'
+          if slug_input:
+              live = [slug_input]
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'slugs={\" \".join(live)}\n')
+          print(f'Events à scraper: {live}')
+          "
+
+      - name: Scrape each active event
+        if: steps.events.outputs.slugs != ''
+        run: |
+          for slug in ${{ steps.events.outputs.slugs }}; do
+            echo "▶ Scraping $slug"
+            if [ -n "${{ inputs.round }}" ]; then
+              python scrapers/scrape_event.py --slug "$slug" --round ${{ inputs.round }} || echo "⚠ Failed"
+            else
+              python scrapers/scrape_event.py --slug "$slug" --auto || echo "⚠ Failed"
+            fi
+          done
+
+      - name: Commit & push if changes
+        run: |
+          git config user.name "frenchmtg-bot"
+          git config user.email "bot@frenchmtg.app"
+          git add public/data/
+          if git diff --quiet --staged; then
+            echo "✓ Aucun changement à commiter"
+          else
+            git commit -m "chore: refresh standings $(date -u +%FT%TZ)"
+            git push
+            echo "✓ Push effectué"
+          fi

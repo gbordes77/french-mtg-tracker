@@ -1,0 +1,193 @@
+/* ============================================================
+   French MTG Tracker — Stylesheet racine
+   ------------------------------------------------------------
+   Importe le design system ManaTuner via design-system/
+   puis ajoute les overrides FR spécifiques au tracker.
+   ============================================================ */
+
+/* 1. Tokens ManaTuner (variables CSS, palette mana, gradients, motion) */
+@import "../design-system/tokens.css";
+
+/* 2. Composants signature ManaTuner (.ds-card, .ds-btn, .ds-chip, .ds-hero-title, .mana-symbol) */
+@import "../design-system/components.css";
+
+/* 3. Tailwind (étend le preset ManaTuner — voir tailwind.config.ts) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Variables FR-spécifiques au tracker
+   ============================================================ */
+
+:root {
+  --fr-blue:  #0055a4;
+  --fr-red:   #ef4135;
+  --fr-white: #ffffff;
+}
+
+/* ============================================================
+   Reset & defaults
+   ============================================================ */
+
+html, body, #root {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--surface-default);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* En dark, on superpose un radial subtil bleu mana pour la profondeur */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%,
+      rgba(14, 104, 171, 0.12),
+      transparent 60%),
+    var(--surface-default);
+}
+
+/* Tabular numerals pour toutes les valeurs chiffrées (data, scores, OMW) */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Texture grain — atmosphère magazine print
+   (cohérent avec le ton "premium éditorial" du brandbook §1)
+   ============================================================ */
+
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ============================================================
+   Mana symbols inline pour les archétypes
+   (utilise mana-font CDN chargé dans index.html)
+   ============================================================ */
+
+.archetype-mana {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  vertical-align: middle;
+  margin-right: 0.4em;
+}
+
+.archetype-mana .ms {
+  font-size: 0.85em;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================================
+   Hero title FR — variant du .ds-hero-title de ManaTuner.
+   On garde le gradient WUBRG mais on ajoute un accent rouge
+   final pour la signature FR (gold→blue→purple→red→FR-red).
+   ============================================================ */
+
+.fr-hero-title {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  background: linear-gradient(
+    135deg,
+    #E9B54C 0%,    /* mana-multicolor (gold) */
+    #0E68AB 25%,   /* mana-blue */
+    #9c27b0 50%,   /* purple intermédiaire */
+    #D3202A 75%,   /* mana-red */
+    var(--fr-red) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ============================================================
+   Overrides .ds-card pour les variantes du tracker
+   (pas de gros ajout — ManaTuner gère déjà light/dark/glass)
+   ============================================================ */
+
+.ds-card--bordered-fr {
+  border-left: 2px solid var(--fr-red) !important;
+}
+
+/* ============================================================
+   Status pill pour événements (live / ended / upcoming)
+   Étend .ds-chip de ManaTuner.
+   ============================================================ */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.status-pill--live {
+  background: rgba(239, 65, 53, 0.1);
+  color: var(--mana-red);
+}
+
+.status-pill--ended {
+  background: var(--glass-secondary);
+  color: var(--text-secondary);
+}
+
+.status-pill--upcoming {
+  background: rgba(14, 104, 171, 0.15);
+  color: var(--mana-blue);
+}
+
+.status-pill__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+.status-pill__dot-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-pill--live .status-pill__dot-core {
+  background: var(--mana-red);
+}
+.status-pill--live .status-pill__dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--mana-red);
+  animation: ds-pulse-ring 1.5s infinite;
+}
+
+@keyframes ds-pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.75; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-pill--live .status-pill__dot::before {
+    animation: none;
+  }
+}

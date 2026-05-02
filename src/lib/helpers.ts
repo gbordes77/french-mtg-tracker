@@ -1,0 +1,254 @@
+import type {
+  FrenchPlayer,
+  Performance,
+  PerformanceTone,
+  PlayerProjections,
+  Projection,
+} from "./types";
+
+// ────────────────────────────────────────────────────────────
+// Calcul du record total à partir des sous-records par format
+// ────────────────────────────────────────────────────────────
+
+export interface TotalRecord {
+  wins: number;
+  losses: number;
+  dropped: boolean;
+}
+
+export function computeTotalRecord(player: FrenchPlayer): TotalRecord {
+  const parts = [
+    player.draftD1,
+    player.standardD1,
+    player.draftD2,
+    player.standardD2,
+  ];
+  let wins = 0;
+  let losses = 0;
+  let dropped = false;
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (part === "DROP") {
+      dropped = true;
+      continue;
+    }
+    const [w, l] = part.split("-").map(Number);
+    if (!isNaN(w)) wins += w;
+    if (!isNaN(l)) losses += l;
+  }
+
+  return { wins, losses, dropped };
+}
+
+// ────────────────────────────────────────────────────────────
+// Projections : combien de victoires sur les rondes restantes
+// pour atteindre Top 8 ou Re-qualif PT
+// ────────────────────────────────────────────────────────────
+
+// Seuils officiels Pro Tour (16 rondes)
+// Source : magic.gg/events/{slug}-fact-sheet-for-competitors
+export const THRESHOLDS = {
+  DAY_2: 12,        // 4 victoires minimum à R8
+  REQUALIF_PT: 30,  // 10 victoires sur 16 rondes = invitation auto au prochain PT
+  TOP_8: 36,        // 12 victoires sur 16 rondes (cut variable)
+  AMP_BONUS: 39,    // Voie alternative via Adjusted Match Points cumulés
+} as const;
+
+export const GOAL_WINS = {
+  DAY_2: 4,
+  REQUALIF_PT: 10,
+  TOP_8: 12,
+} as const;
+
+export function projectionToGoal(
+  currentWins: number,
+  roundsRemaining: number,
+  goalWins: number,
+): Projection {
+  const winsNeeded = goalWins - currentWins;
+  if (winsNeeded <= 0) return { status: "acquired", display: "acquis" };
+  if (winsNeeded > roundsRemaining)
+    return { status: "impossible", display: "hors d'atteinte" };
+  const lossesAllowed = roundsRemaining - winsNeeded;
+  return {
+    status: "achievable",
+    display: `${winsNeeded}-${lossesAllowed}+ requis`,
+  };
+}
+
+export function getProjections(
+  player: FrenchPlayer,
+  currentRound: number,
+  totalRounds = 16,
+): PlayerProjections | null {
+  const rec = computeTotalRecord(player);
+  if (rec.dropped || player.finalRecord) return null;
+  const roundsRemaining = totalRounds - currentRound;
+  if (roundsRemaining <= 0) return null;
+
+  return {
+    top8: projectionToGoal(rec.wins, roundsRemaining, GOAL_WINS.TOP_8),
+    requalif: projectionToGoal(rec.wins, roundsRemaining, GOAL_WINS.REQUALIF_PT),
+  };
+}
+
+// ────────────────────────────────────────────────────────────
+// Tone de performance : statut visuel global du joueur
+// ────────────────────────────────────────────────────────────
+
+export function performanceTone(
+  points: number,
+  currentRound: number,
+  _totalRounds = 16,
+): Performance {
+  if (points === 0 && currentRound >= 5)
+    return { tone: "dropped", label: "Drop" };
+
+  // Day 1 (rondes 1-8)
+  if (currentRound <= 8) {
+    if (points >= 21) return { tone: "elite", label: "Top contender" };
+    if (points >= 18) return { tone: "strong", label: "Top 8 pace" };
+    if (points >= 12) return { tone: "ok", label: "Day 2 qualifié" };
+    if (points >= 9) return { tone: "bubble", label: "Bubble Day 2" };
+    return { tone: "weak", label: "Éliminé Day 2" };
+  }
+
+  // Day 2 (rondes 9-16)
+  if (points >= THRESHOLDS.TOP_8) return { tone: "elite", label: "Top 8" };
+  if (points >= 33) return { tone: "strong", label: "Top 8 pace" };
+  if (points >= THRESHOLDS.REQUALIF_PT)
+    return { tone: "ok", label: "PT requalifié" };
+  if (points >= 24) return { tone: "bubble", label: "In the money" };
+  return { tone: "weak", label: "Hors course" };
+}
+
+// ────────────────────────────────────────────────────────────
+// Couleur d'archétype — sémantique des couleurs Magic
+// Palette canon ManaTuner (brandbook §2 — never change)
+// W = Plains, U = Island, B = Swamp, R = Mountain, G = Forest
+// ────────────────────────────────────────────────────────────
+
+export interface ArchetypeStyle {
+  bg: string;
+  border: string;
+  fg: string;
+  /** Codes couleur mana pour rendu via mana-font (ex: ["u","r"] pour Izzet) */
+  manaCodes: string[];
+}
+
+/**
+ * Mapping archétype → identité couleur mana.
+ * Couleurs Wizards canoniques en valeurs RGB pour les rgba transparentes.
+ * - mana-blue  #0E68AB
+ * - mana-red   #D3202A
+ * - mana-green #00733E
+ * - mana-gold  #E9B54C (multicolor)
+ * - mana-black #150B00
+ */
+export function archetypeColor(archetype: string): ArchetypeStyle {
+  const a = archetype.toLowerCase();
+
+  // Izzet (U+R) — le plus fréquent au PT SOS
+  if (a.includes("izzet")) {
+    return {
+      bg: "rgba(14, 104, 171, 0.12)",
+      border: "#0E68AB",
+      fg: "#4A9EE8",
+      manaCodes: ["u", "r"],
+    };
+  }
+
+  // Mono-Green ou archétypes verts dominants
+  if (a.includes("mono-green") || a.includes("mono green")) {
+    return {
+      bg: "rgba(0, 115, 62, 0.15)",
+      border: "#00733E",
+      fg: "#4CAF50",
+      manaCodes: ["g"],
+    };
+  }
+
+  // Simic (G+U)
+  if (a.includes("simic") || a.includes("bant rhythm")) {
+    return {
+      bg: "rgba(0, 115, 62, 0.12)",
+      border: "#00733E",
+      fg: "#4CAF50",
+      manaCodes: ["g", "u"],
+    };
+  }
+
+  // Bant (W+U+G)
+  if (a.includes("bant")) {
+    return {
+      bg: "rgba(233, 181, 76, 0.12)",
+      border: "#E9B54C",
+      fg: "#FFD700",
+      manaCodes: ["w", "u", "g"],
+    };
+  }
+
+  // Jeskai (W+U+R)
+  if (a.includes("jeskai")) {
+    return {
+      bg: "rgba(233, 181, 76, 0.10)",
+      border: "#E9B54C",
+      fg: "#FFD700",
+      manaCodes: ["u", "r", "w"],
+    };
+  }
+
+  // Sultai (B+U+G) ou variantes Reanimator/Dimir
+  if (a.includes("sultai") || a.includes("reanimator")) {
+    return {
+      bg: "rgba(21, 11, 0, 0.30)",
+      border: "#3D3D3D",
+      fg: "#9E9E9E",
+      manaCodes: ["b", "u", "g"],
+    };
+  }
+
+  if (a.includes("dimir")) {
+    return {
+      bg: "rgba(21, 11, 0, 0.25)",
+      border: "#3D3D3D",
+      fg: "#9E9E9E",
+      manaCodes: ["u", "b"],
+    };
+  }
+
+  // Fallback colorless
+  return {
+    bg: "rgba(203, 197, 192, 0.08)",
+    border: "#9E9E9E",
+    fg: "#CBC5C0",
+    manaCodes: ["c"],
+  };
+}
+
+// ────────────────────────────────────────────────────────────
+// Style de tone — palette mana ManaTuner (dark mode values)
+// ────────────────────────────────────────────────────────────
+
+export const toneColors: Record<PerformanceTone, string> = {
+  elite:   "#FFD700",   // mana-multicolor dark — gold premium
+  strong:  "#4CAF50",   // mana-green dark
+  ok:      "#4A9EE8",   // mana-blue dark
+  bubble:  "#E9B54C",   // mana-multicolor light — warning
+  weak:    "#9E9E9E",   // mana-colorless dark
+  dropped: "#3D3D3D",   // mana-black dark
+};
+
+export function projectionColor(
+  status: Projection["status"],
+): string {
+  switch (status) {
+    case "acquired":
+      return "#4CAF50";   // mana-green dark
+    case "achievable":
+      return "#F5F5F5";   // text-primary dark
+    case "impossible":
+      return "#666666";   // muted
+  }
+}

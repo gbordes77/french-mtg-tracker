@@ -1,0 +1,104 @@
+# SOURCE DE VÉRITÉ — Joueurs identifiés comme français
+#
+# ⚠️ MAINTENU À LA MAIN. À mettre à jour avant chaque Pro Tour.
+# Voir CLAUDE.md > "Workflow de mise à jour de french_players.yaml" pour la procédure.
+#
+# Format des noms : "Last, First" tel qu'affiché sur magic.gg (case-sensitive).
+# Préserver les diacritiques (é, è, ô) — pas de normalisation.
+
+players:
+  - name: "Depraz, Jean-Emmanuel"
+    twitter: "@JEDepraz"
+    verified: true
+    notes: "Champion du monde 2023 · Capitaine team Baguette / Undying Baguette"
+
+  - name: "Ramboa, Thierry"
+    twitter: "@Triphop_MTG"
+    verified: true
+    notes: "Régulier sur 3 PT · 39+ AMP"
+
+  - name: "Courtiat, Robin"
+    twitter: "@RobinCourtiat"
+    verified: true
+
+  - name: "Verdierre, Gaétan"
+    twitter: null
+    verified: true
+    notes: "Spotlight Lyon. Orthographe magic.gg : 'Verdierre' avec deux R"
+
+  - name: "Fauquenoi, Noé"
+    twitter: "@noefauquenoi"
+    verified: true
+    notes: "MTGO Champions Showcase"
+
+  - name: "Blondiaux, Timothée"
+    twitter: null
+    verified: true
+    notes: "Spotlight Lyon"
+
+  - name: "Paulot, Alexey"
+    twitter: null
+    verified: true
+
+  - name: "Orru, Valentin"
+    twitter: null
+    verified: true
+    notes: "RC EMEA"
+
+  - name: "Tron, Cyprien"
+    twitter: "@CyprienTron"
+    verified: true
+
+  - name: "Henry, Julien"
+    twitter: null
+    verified: true
+    notes: "Team Baguette / Undying Baguette"
+
+  - name: "Boulinguiez, Mike"
+    twitter: null
+    verified: true
+    notes: "RC EMEA"
+
+  - name: "Petri, Guillaume"
+    twitter: null
+    verified: true
+
+  - name: "Rayvich, Maxime"
+    twitter: null
+    verified: false
+    notes: "⚠️ À VÉRIFIER — possiblement québécois (vérifier profil melee.gg + historique RC)"
+
+# ────────────────────────────────────────────────────────────
+# Joueurs explicitement EXCLUS — Canadiens / autres francophones
+# ────────────────────────────────────────────────────────────
+# Ces joueurs ont des prénoms français mais ne sont pas français.
+# Ne JAMAIS les réintégrer dans players: même si un nouveau qualifié
+# semble similaire — toujours vérifier l'historique RC d'abord.
+
+excluded:
+  - name: "Offman, Noé"
+    nationality: "CA (Québec)"
+    reason: "RC Montréal mai 2025 + RC F2F Ottawa Fév 2024 + Team Trios Montréal Janv 2024"
+    sources:
+      - "https://www.mtgtop8.com/event?e=69256&f=ST"
+      - "https://mtgtop8.com/event?e=52172&f=MO"
+
+  - name: "Dore, Max"
+    nationality: "CA (Québec)"
+    reason: "Team Baguette Sirop d'Érable au PT Lorwyn Eclipsed = équipe franco-canadienne, Dore = québécois"
+
+  - name: "Pham, Ha"
+    nationality: "CA (Québec)"
+    reason: "Team Baguette Sirop d'Érable = équipe franco-canadienne"
+
+  - name: "Roudier, Remi"
+    nationality: "CA (Québec)"
+    reason: "Team Baguette Sirop d'Érable = équipe franco-canadienne"
+
+  - name: "Dubreuil, Eleanor"
+    nationality: "CA (Québec)"
+    reason: "RC Montréal — vérifier dans events F2F Tour"
+
+  - name: "Harvey, Clément"
+    nationality: "CA (Québec)"
+    reason: "Circuit F2F Tour"

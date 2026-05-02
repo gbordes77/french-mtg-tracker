@@ -1,0 +1,25 @@
+{
+  "slug": "worlds-31",
+  "round": 16,
+  "totalRounds": 16,
+  "scrapedAt": "2025-12-08T00:00:00Z",
+  "fieldSize": 128,
+  "frenchPlayers": [
+    {
+      "rank": 4,
+      "first": "Jean-Emmanuel",
+      "last": "Depraz",
+      "points": 30,
+      "omw": 0.5821,
+      "archetype": "Boros Energy",
+      "draftD1": null,
+      "standardD1": "5-2",
+      "draftD2": null,
+      "standardD2": "4-3",
+      "finalRecord": "Quarterfinals",
+      "source": "Adjusted Match Points",
+      "rcOrigin": "FR",
+      "noLimited": true
+    }
+  ]
+}

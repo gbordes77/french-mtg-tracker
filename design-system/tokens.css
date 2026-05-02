@@ -1,0 +1,222 @@
+/* ============================================================
+   ManaTuner Design System — CSS Variables
+   ------------------------------------------------------------
+   Drop-in for any project. Supports light + dark via
+   [data-theme="dark"] OR @media (prefers-color-scheme: dark).
+   Switching strategy: pick ONE — see README.
+   ============================================================ */
+
+:root {
+  /* ---------- MTG Mana Colors (canonical, theme-agnostic) ---------- */
+  --mana-white:      #F8F6D8;
+  --mana-blue:       #0E68AB;
+  --mana-black:      #150B00;
+  --mana-red:        #D3202A;
+  --mana-green:      #00733E;
+  --mana-colorless:  #CBC5C0;
+  --mana-multicolor: #E9B54C;
+
+  /* Glow effects (rgba — don't translate to dark) */
+  --glow-white: rgba(248, 246, 216, 0.6);
+  --glow-blue:  rgba(14, 104, 171, 0.6);
+  --glow-black: rgba(90, 60, 90, 0.6);
+  --glow-red:   rgba(211, 32, 42, 0.6);
+  --glow-green: rgba(0, 115, 62, 0.6);
+
+  /* ---------- Brand & Theme Colors (LIGHT) ---------- */
+  --brand-primary:        #1565C0;
+  --brand-primary-light:  #42A5F5;
+  --brand-primary-dark:   #0D47A1;
+  --brand-secondary:      #7B1FA2;
+  --brand-secondary-light:#BA68C8;
+  --brand-secondary-dark: #4A148C;
+
+  --feedback-error:   #D3202A;
+  --feedback-warning: #E9B54C;
+  --feedback-info:    #0E68AB;
+  --feedback-success: #00733E;
+
+  --surface-default: #F5F3EE;   /* parchment */
+  --surface-paper:   #FFFFFF;
+
+  --text-primary:    #1A1A1A;
+  --text-secondary:  #555555;
+
+  --glass-primary:   rgba(255, 255, 255, 0.8);
+  --glass-secondary: rgba(255, 255, 255, 0.6);
+  --glass-border:    rgba(255, 255, 255, 0.2);
+
+  /* ---------- Signature Gradients ---------- */
+  --gradient-cta-knowledge:
+    linear-gradient(135deg, #0E68AB 0%, #6A1B9A 100%);
+  --gradient-cta-knowledge-hover:
+    linear-gradient(135deg, #1976D2 0%, #7B1FA2 100%);
+  --gradient-cta-premium:
+    linear-gradient(135deg, #E9B54C 0%, #FFD700 50%, #E9B54C 100%);
+  --gradient-cta-premium-hover:
+    linear-gradient(135deg, #FFD700 0%, #FFC107 50%, #FFD700 100%);
+  --gradient-hero-wubrg:
+    linear-gradient(135deg,
+      #E9B54C 0%,
+      #0E68AB 25%,
+      #9c27b0 50%,
+      #D3202A 75%,
+      #00733E 100%);
+  --gradient-bg-primary:
+    linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --gradient-bg-secondary:
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* ---------- Typography ---------- */
+  --font-heading: "Cinzel", "Playfair Display", serif;
+  --font-body:    "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+  --font-mono:    "JetBrains Mono", "Fira Code", monospace;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-heavy:    800;
+
+  --fs-h1:    3rem;
+  --fs-h2:    2.5rem;
+  --fs-h3:    2rem;
+  --fs-h4:    1.5rem;
+  --fs-h5:    1.25rem;
+  --fs-h6:    1rem;
+  --fs-body1: 1rem;
+  --fs-body2: 0.875rem;
+
+  --lh-tight:   1.2;
+  --lh-snug:    1.3;
+  --lh-normal:  1.4;
+  --lh-relaxed: 1.5;
+  --lh-loose:   1.6;
+
+  --ls-display: 0.02em;
+  --ls-heading: 0.01em;
+
+  /* ---------- Spacing (4-8 baseline, rem) ---------- */
+  --space-xs:  0.25rem;   /*  4px */
+  --space-sm:  0.5rem;    /*  8px */
+  --space-md:  1rem;      /* 16px */
+  --space-lg:  1.5rem;    /* 24px */
+  --space-xl:  2rem;      /* 32px */
+  --space-2xl: 3rem;      /* 48px */
+
+  /* ---------- Radius ---------- */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;     /* default — buttons, inputs */
+  --radius-xl:   16px;     /* cards, modals */
+  --radius-full: 9999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+  --shadow-button-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-card-hover:   0 12px 32px rgba(0, 0, 0, 0.15);
+
+  /* ---------- Motion ---------- */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   350ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- Glass ---------- */
+  --blur-glass: 10px;
+}
+
+/* ============================================================
+   Dark Mode — toggle via <html data-theme="dark"> OR system.
+   The two blocks are duplicated on purpose; pick whichever
+   strategy your app uses and delete the other.
+   ============================================================ */
+
+[data-theme="dark"] {
+  --mana-white:      #F5F0D0;
+  --mana-blue:       #4A9EE8;
+  --mana-black:      #3D3D3D;
+  --mana-red:        #FF5252;
+  --mana-green:      #4CAF50;
+  --mana-colorless:  #9E9E9E;
+  --mana-multicolor: #FFD700;
+
+  --glow-white: rgba(245, 240, 208, 0.5);
+  --glow-blue:  rgba(74, 158, 232, 0.5);
+  --glow-black: rgba(120, 80, 120, 0.5);
+  --glow-red:   rgba(255, 82, 82, 0.5);
+  --glow-green: rgba(76, 175, 80, 0.5);
+
+  --brand-primary:        #64B5F6;
+  --brand-primary-light:  #90CAF9;
+  --brand-primary-dark:   #42A5F5;
+  --brand-secondary:      #CE93D8;
+  --brand-secondary-light:#E1BEE7;
+  --brand-secondary-dark: #BA68C8;
+
+  --feedback-error:   #FF6B6B;
+  --feedback-warning: #FFD54F;
+  --feedback-info:    #4FC3F7;
+  --feedback-success: #69F0AE;
+
+  --surface-default: #0D0D0F;
+  --surface-paper:   #1A1A1E;
+
+  --text-primary:    #F5F5F5;
+  --text-secondary:  #AAAAAA;
+
+  --glass-primary:   rgba(255, 255, 255, 0.05);
+  --glass-secondary: rgba(255, 255, 255, 0.02);
+  --glass-border:    rgba(255, 255, 255, 0.1);
+
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mana-white:      #F5F0D0;
+    --mana-blue:       #4A9EE8;
+    --mana-black:      #3D3D3D;
+    --mana-red:        #FF5252;
+    --mana-green:      #4CAF50;
+    --mana-colorless:  #9E9E9E;
+    --mana-multicolor: #FFD700;
+
+    --brand-primary:        #64B5F6;
+    --brand-primary-light:  #90CAF9;
+    --brand-primary-dark:   #42A5F5;
+    --brand-secondary:      #CE93D8;
+
+    --feedback-error:   #FF6B6B;
+    --feedback-warning: #FFD54F;
+    --feedback-info:    #4FC3F7;
+    --feedback-success: #69F0AE;
+
+    --surface-default: #0D0D0F;
+    --surface-paper:   #1A1A1E;
+
+    --text-primary:    #F5F5F5;
+    --text-secondary:  #AAAAAA;
+
+    --glass-primary:   rgba(255, 255, 255, 0.05);
+    --glass-secondary: rgba(255, 255, 255, 0.02);
+    --glass-border:    rgba(255, 255, 255, 0.1);
+
+    --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ============================================================
+   A11y guardrails (keep these — they protect the brand)
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-normal: 0.01ms;
+    --duration-slow: 0.01ms;
+  }
+}

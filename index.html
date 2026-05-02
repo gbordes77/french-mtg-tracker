@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0D0D0F" />
+
+    <!-- SEO -->
+    <title>French MTG Tracker — Les Français au Pro Tour</title>
+    <meta name="description" content="Suivi en temps réel des performances des joueurs français aux Pro Tours, World Championship et événements compétitifs Magic: The Gathering." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="French MTG Tracker" />
+    <meta property="og:description" content="Les Français au Pro Tour, en direct." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://french-mtg-tracker.vercel.app" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@MTGTools_FR" />
+
+    <!--
+      Polices ManaTuner (canon brandbook §3) :
+      - Cinzel    → display headings (H1-H4)
+      - Inter     → body, H5/H6
+      - JetBrains Mono → techTerm captions, data tabulaire
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Mana Font (https://mana.andrewgioia.com) — symboles WUBRG canoniques.
+      Servi via CDN ; en prod on pourra l'inliner via npm i mana-font.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mana-font@1.18.0/css/mana.min.css"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
