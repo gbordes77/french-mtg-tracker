@@ -193,6 +193,19 @@ Le design system **est intégré nativement** dans `design-system/`. Il vient di
 - **Préférer les CSS variables** (`var(--text-primary)`, `var(--mana-blue)`) aux hexcodes hardcodés
 - **Les chips d'archétype** utilisent les vraies couleurs mana — voir `lib/helpers.ts > archetypeColor`
 
+## Personas utilisateurs (méthodologie d'évaluation)
+
+`mtg-player-personas.md` à la racine définit **6 personas joueurs MTG** à incarner pour analyser le site sous plusieurs angles : Léo (Curieux), Sarah (Régulière), Karim (Tacticien), Natsuki (Grinder), David (Architecte), Thibault (Capitaine de table EDH).
+
+**À utiliser quand** :
+- Évaluer une feature avant de la merger ("comment Léo / Karim / Natsuki la perçoit ?")
+- Auditer le site (incarner chaque persona pour identifier frictions, manques, opportunités)
+- Décider d'une priorité produit (chaque persona a des trust/privacy/distribution behaviors différents — voir grille 8 axes)
+
+Chaque persona inclut sa **trust posture** (comportement compte/account) et son **distribution behavior** (qui partage où, avec quel artefact). L'axe "Partage" est falsifiable — pas de reviews vagues type "ça plairait peut-être".
+
+Le tracker actuel cible principalement **Sarah/Karim/Natsuki** (compétiteurs) mais doit rester accessible à **Léo** (curieux) et utile au **Capitaine de Table** dans la mesure où les Pro Tours influencent indirectement leur métagame Commander/EDH.
+
 ## Ce que Claude Code peut faire sans demander
 
 - Refactoriser `App.tsx` en sous-composants si > 400 lignes
