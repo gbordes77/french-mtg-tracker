@@ -37,20 +37,40 @@ export default function Header() {
     window.localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
-  // Scroll-spy basique : la section dont le top est le plus proche de 120px (sous le nav)
+  // Scroll-spy via IntersectionObserver : zéro travail sur scroll event,
+  // notification uniquement quand une section entre/sort du viewport.
   useEffect(() => {
-    const handler = () => {
-      const offsets = NAV_ITEMS.map((item) => {
-        const el = document.getElementById(item.id);
-        if (!el) return { id: item.id, top: Infinity };
-        return { id: item.id, top: Math.abs(el.getBoundingClientRect().top - 120) };
-      });
-      const closest = offsets.sort((a, b) => a.top - b.top)[0];
-      if (closest && closest.top !== Infinity) setActive(closest.id);
-    };
-    window.addEventListener("scroll", handler, { passive: true });
-    handler();
-    return () => window.removeEventListener("scroll", handler);
+    const elements = NAV_ITEMS.map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (elements.length === 0) return;
+
+    const visibleSections = new Map<string, number>(); // id → intersectionRatio
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visibleSections.set(entry.target.id, entry.intersectionRatio);
+          } else {
+            visibleSections.delete(entry.target.id);
+          }
+        }
+        if (visibleSections.size === 0) return;
+        // Section avec le plus gros ratio visible = active
+        const [activeId] = [...visibleSections.entries()].sort(
+          (a, b) => b[1] - a[1],
+        )[0];
+        setActive(activeId);
+      },
+      {
+        // Ignore les ~120px sous le nav (pas vraiment "vu") et le tiers bas (l'utilisateur lit du haut)
+        rootMargin: "-120px 0px -33% 0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -90,7 +110,7 @@ export default function Header() {
         </a>
 
         {/* NAV */}
-        <nav className="flex items-center gap-2 flex-wrap">
+        <nav aria-label="Sections du site" className="flex items-center gap-2 flex-wrap">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = active === item.id;
@@ -98,6 +118,7 @@ export default function Header() {
               <a
                 key={item.id}
                 href={item.href}
+                aria-current={isActive ? "location" : undefined}
                 className="flex items-center gap-2 transition-all"
                 style={{
                   padding: "8px 14px",
@@ -107,7 +128,7 @@ export default function Header() {
                   fontWeight: 500,
                   textDecoration: "none",
                   background: isActive
-                    ? "linear-gradient(135deg, #E9B54C 0%, #FFD700 100%)"
+                    ? "var(--gradient-cta-premium)"
                     : "rgba(255,255,255,0.12)",
                   color: isActive ? "#1A1A1A" : "#fff",
                   boxShadow: isActive
@@ -137,6 +158,7 @@ export default function Header() {
           <button
             type="button"
             aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+            aria-pressed={theme === "dark"}
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
             className="flex items-center justify-center transition-all"

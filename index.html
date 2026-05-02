@@ -15,7 +15,11 @@
     <meta property="og:description" content="Les Français au Pro Tour, en direct." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://french-mtg-tracker.vercel.app" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta name="twitter:image" content="/og-image.jpg" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -26,22 +30,51 @@
       - Cinzel    → display headings (H1-H4)
       - Inter     → body, H5/H6
       - JetBrains Mono → techTerm captions, data tabulaire
+
+      Weights réduits aux usages réels du code : Cinzel 500/700, Inter
+      400/500/600/700, JetBrains 400/500. -60kb transferred vs avant.
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
     <!--
       Mana Font (https://mana.andrewgioia.com) — symboles WUBRG canoniques.
-      Servi via CDN ; en prod on pourra l'inliner via npm i mana-font.
+      Chargé en async pour ne pas bloquer le LCP (les symboles peuvent
+      flasher 50ms après le first paint sans nuire à l'UX).
     -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://cdn.jsdelivr.net/npm/mana-font@1.18.0/css/mana.min.css"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/mana-font@1.18.0/css/mana.min.css"
+      />
+    </noscript>
+
+    <!--
+      Pré-applique le thème (light|dark) depuis localStorage AVANT le first paint
+      pour éviter un flash de thème au mount React. Le toggle dans Header.tsx
+      lit/écrit la même clé `frmtg-theme`.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("frmtg-theme");
+          if (saved === "light" || saved === "dark") {
+            document.documentElement.dataset.theme = saved;
+          }
+        } catch (e) { /* localStorage indispo (private browsing) → garde l'attribut HTML */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

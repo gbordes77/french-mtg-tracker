@@ -10,15 +10,20 @@ import ThresholdsBlock from "@/components/ThresholdsBlock";
 import MethodologyFooter from "@/components/MethodologyFooter";
 import MarketingHero from "@/components/MarketingHero";
 
+const EMPTY_PLAYERS: FrenchPlayer[] = [];
+
 export default function App() {
   const [events, setEvents] = useState<MTGEvent[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [eventData, setEventData] = useState<EventData | null>(null);
+  const [eventLoading, setEventLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/data/events.json")
+    const ctrl = new AbortController();
+    fetch("/data/events.json", { signal: ctrl.signal })
       .then((r) => {
         if (!r.ok) throw new Error("Impossible de charger les événements");
         return r.json();
@@ -28,20 +33,30 @@ export default function App() {
         const live = data.find((e) => e.status === "live");
         setSelectedSlug((live ?? data[0])?.slug ?? null);
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        if (e.name !== "AbortError") setError(e.message);
+      })
       .finally(() => setLoading(false));
+    return () => ctrl.abort();
   }, []);
 
   useEffect(() => {
     if (!selectedSlug) return;
+    const ctrl = new AbortController();
     setEventData(null);
-    fetch(`/data/${selectedSlug}.json`)
+    setEventError(null);
+    setEventLoading(true);
+    fetch(`/data/${selectedSlug}.json`, { signal: ctrl.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`Données indisponibles pour ${selectedSlug}`);
         return r.json();
       })
       .then(setEventData)
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        if (e.name !== "AbortError") setEventError(e.message);
+      })
+      .finally(() => setEventLoading(false));
+    return () => ctrl.abort();
   }, [selectedSlug]);
 
   const event = useMemo(
@@ -49,7 +64,7 @@ export default function App() {
     [events, selectedSlug],
   );
 
-  const players: FrenchPlayer[] = eventData?.frenchPlayers ?? [];
+  const players: FrenchPlayer[] = eventData?.frenchPlayers ?? EMPTY_PLAYERS;
 
   const stats = useMemo(() => {
     if (!event) return { total: 0, active: 0, day2Lock: 0, onPaceTop8: 0 };
@@ -69,6 +84,8 @@ export default function App() {
   if (loading) {
     return (
       <div
+        role="status"
+        aria-live="polite"
         className="min-h-screen flex items-center justify-center font-mono"
         style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}
       >
@@ -80,6 +97,7 @@ export default function App() {
   if (error || !event) {
     return (
       <div
+        role="alert"
         className="min-h-screen flex items-center justify-center font-mono"
         style={{ color: "var(--fr-red)", fontSize: "0.875rem" }}
       >
@@ -118,13 +136,14 @@ export default function App() {
                 )}
               </div>
 
-              {/* Titre avec gradient WUBRG (signature ManaTuner brandbook §3) */}
-              <h1
+              {/* Titre avec gradient WUBRG (signature ManaTuner brandbook §3).
+                  h2 car le h1 unique de la page est dans MarketingHero. */}
+              <h2
                 className="fr-hero-title"
                 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
               >
                 {event.name}
-              </h1>
+              </h2>
 
               <div
                 className="mt-6 flex items-baseline gap-6 font-mono flex-wrap"
@@ -180,10 +199,29 @@ export default function App() {
           </div>
 
           {/* ROSTER TABLE */}
-          {players.length > 0 ? (
+          {eventLoading && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="ds-card p-12 text-center font-mono"
+              style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}
+            >
+              Chargement des données…
+            </div>
+          )}
+          {!eventLoading && eventError && (
+            <div
+              role="alert"
+              className="ds-card p-12 text-center font-mono"
+              style={{ fontSize: "0.875rem", color: "var(--fr-red)" }}
+            >
+              {eventError}
+            </div>
+          )}
+          {!eventLoading && !eventError && players.length > 0 ? (
             <>
               <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-                <h2
+                <h3
                   className="italic"
                   style={{
                     fontFamily: "var(--font-heading)",
@@ -193,7 +231,7 @@ export default function App() {
                   }}
                 >
                   La délégation
-                </h2>
+                </h3>
                 <div
                   className="font-mono flex items-center gap-2"
                   style={{ fontSize: "11px", color: "var(--text-secondary)" }}
@@ -206,6 +244,10 @@ export default function App() {
 
               <div className="ds-card overflow-x-auto" style={{ padding: 0 }}>
                 <table className="w-full min-w-[1100px]">
+                  <caption className="sr-only">
+                    Performances des joueurs français à {event.name}, ronde{" "}
+                    {event.currentRound} sur {event.totalRounds}.
+                  </caption>
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
                       {[
@@ -219,6 +261,7 @@ export default function App() {
                       ].map((h, idx) => (
                         <th
                           key={h}
+                          scope="col"
                           className="font-mono uppercase font-normal text-left"
                           style={{
                             padding: "12px",
@@ -271,7 +314,7 @@ export default function App() {
                   <tbody>
                     {players.map((p, i) => (
                       <PerformanceRow
-                        key={`${p.first}-${p.last}`}
+                        key={`${p.last}|${p.first}|${p.rank}`}
                         player={p}
                         event={event}
                         isFirst={i === 0}
@@ -281,7 +324,7 @@ export default function App() {
                 </table>
               </div>
             </>
-          ) : (
+          ) : !eventLoading && !eventError ? (
             <div className="ds-card p-12 text-center">
               <div
                 className="font-mono"
@@ -292,7 +335,7 @@ export default function App() {
                   : "Aucun joueur français identifié à ce stade"}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* FOOTER */}
           <div

@@ -45,13 +45,16 @@ jobs:
 
       - name: Determine active events
         id: events
+        env:
+          # Inputs passés via env quoted pour éviter toute injection shell.
+          SLUG_INPUT: ${{ inputs.slug }}
         run: |
           # Lit public/data/events.json et ne garde que les events status=live
           python3 -c "
           import json, os
           events = json.load(open('public/data/events.json'))
           live = [e['slug'] for e in events if e['status'] == 'live']
-          slug_input = '${{ inputs.slug }}'
+          slug_input = os.environ.get('SLUG_INPUT', '').strip()
           if slug_input:
               live = [slug_input]
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
@@ -61,15 +64,39 @@ jobs:
 
       - name: Scrape each active event
         if: steps.events.outputs.slugs != ''
+        env:
+          # Inputs interpolés dans le shell uniquement via variables env quotées.
+          # La validation finale du slug se fait côté Python (SLUG_REGEX).
+          ROUND_INPUT: ${{ inputs.round }}
+          SLUGS: ${{ steps.events.outputs.slugs }}
         run: |
-          for slug in ${{ steps.events.outputs.slugs }}; do
+          set -e
+          fail_count=0
+          ok_count=0
+          for slug in $SLUGS; do
             echo "▶ Scraping $slug"
-            if [ -n "${{ inputs.round }}" ]; then
-              python scrapers/scrape_event.py --slug "$slug" --round ${{ inputs.round }} || echo "⚠ Failed"
+            if [ -n "$ROUND_INPUT" ]; then
+              if python scrapers/scrape_event.py --slug "$slug" --round "$ROUND_INPUT"; then
+                ok_count=$((ok_count + 1))
+              else
+                echo "⚠ Failed: $slug R$ROUND_INPUT"
+                fail_count=$((fail_count + 1))
+              fi
             else
-              python scrapers/scrape_event.py --slug "$slug" --auto || echo "⚠ Failed"
+              if python scrapers/scrape_event.py --slug "$slug" --auto; then
+                ok_count=$((ok_count + 1))
+              else
+                echo "⚠ Failed: $slug --auto"
+                fail_count=$((fail_count + 1))
+              fi
             fi
           done
+          echo "Résultat scrape: $ok_count OK, $fail_count fails"
+          # Si TOUS les events ont échoué, on signale au workflow
+          if [ "$ok_count" -eq 0 ] && [ "$fail_count" -gt 0 ]; then
+            echo "::error::Tous les events ont échoué ($fail_count/$fail_count)"
+            exit 1
+          fi
 
       - name: Commit & push if changes
         run: |

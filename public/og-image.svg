@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D0D0F"/>
+      <stop offset="100%" stop-color="#0E68AB" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="wubrg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E9B54C"/>
+      <stop offset="25%" stop-color="#0E68AB"/>
+      <stop offset="50%" stop-color="#9c27b0"/>
+      <stop offset="75%" stop-color="#D3202A"/>
+      <stop offset="100%" stop-color="#00733E"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0" r="0.7">
+      <stop offset="0%" stop-color="#0E68AB" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#0E68AB" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- 5 cercles mana symboliques -->
+  <g transform="translate(600, 180)">
+    <circle cx="-160" cy="0" r="28" fill="#F8F6D8" stroke="#fff" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="-80"  cy="0" r="28" fill="#0E68AB"/>
+    <circle cx="0"    cy="0" r="28" fill="#150B00"/>
+    <circle cx="80"   cy="0" r="28" fill="#D3202A"/>
+    <circle cx="160"  cy="0" r="28" fill="#00733E"/>
+  </g>
+
+  <!-- Titre -->
+  <text
+    x="600" y="370"
+    text-anchor="middle"
+    font-family="Cinzel, Playfair Display, serif"
+    font-weight="700"
+    font-size="92"
+    fill="url(#wubrg)"
+  >Les Français au Pro Tour</text>
+
+  <!-- Sous-titre -->
+  <text
+    x="600" y="440"
+    text-anchor="middle"
+    font-family="Inter, sans-serif"
+    font-weight="400"
+    font-size="28"
+    fill="#F5F5F5"
+    fill-opacity="0.85"
+  >Suivi compétitif · Pro Tour · Worlds · Spotlight · RC EMEA</text>
+
+  <!-- Footer / brand -->
+  <text
+    x="600" y="540"
+    text-anchor="middle"
+    font-family="JetBrains Mono, monospace"
+    font-weight="500"
+    font-size="20"
+    fill="#AAAAAA"
+    letter-spacing="6"
+  >FRENCH MTG TRACKER</text>
+</svg>

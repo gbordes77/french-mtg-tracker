@@ -82,8 +82,8 @@ export default function MarketingHero() {
           <Chip
             icon={Code2}
             label="Open source"
-            color="#9c27b0"
-            bg="rgba(156,39,176,0.12)"
+            color="#6A1B9A"
+            bg="rgba(106,27,154,0.12)"
           />
         </div>
 
