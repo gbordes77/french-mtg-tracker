@@ -28,7 +28,7 @@ export default function MethodologyFooter({ event }: Props) {
           <div style={blockTitleStyle}>Méthodologie</div>
           <p style={bodyStyle}>
             Identification croisée via la liste d'invitation magic.gg, les{" "}
-            <em>Regional Championship</em> EMEA et les Spotlight Lyon.
+            <em>Regional Championship</em> EMEA et les Spotlight en Europe.
           </p>
         </div>
         <div>
