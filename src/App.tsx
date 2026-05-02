@@ -454,6 +454,14 @@ export default function App() {
               <ThresholdsBlock />
             </div>
 
+            {/* COURSE AUX 39+ AMP — total projeté = baseline magic.gg + live.
+                Charge public/data/amp.json (généré par scrape_amp.py). */}
+            {!eventLoading && !eventError && players.length > 0 && event.status === "live" && (
+              <div id="amp">
+                <AmpRaceBlock players={players} />
+              </div>
+            )}
+
             {/* À VENIR — uniquement les événements upcoming */}
             {events.some((e) => e.status === "upcoming") && (
               <section id="events" className="mb-12">
@@ -486,15 +494,6 @@ export default function App() {
             <div id="methodo">
               <MethodologyFooter event={event} />
             </div>
-
-            {/* COURSE AUX 39+ AMP — DERNIER bloc de la page.
-                Charge public/data/amp.json (généré par scrape_amp.py).
-                Total projeté = baseline magic.gg + live AMP du PT en cours. */}
-            {!eventLoading && !eventError && players.length > 0 && event.status === "live" && (
-              <div id="amp">
-                <AmpRaceBlock players={players} />
-              </div>
-            )}
           </div>
         </div>
       </div>
