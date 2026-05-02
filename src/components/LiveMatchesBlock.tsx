@@ -1,5 +1,6 @@
 import { Radio, Star } from "lucide-react";
 import type { LiveMatch, LiveRound } from "@/lib/types";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import ArchetypeChip from "./ArchetypeChip";
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
  * en games (0-0, 1-0, 2-1...), status (en cours / terminé), feature match.
  */
 export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Props) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   if (!matches || matches.length === 0) return null;
 
   const inProgress = matches.filter((m) => !m.hasResult).length;
@@ -60,6 +63,13 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
         </div>
       </div>
 
+      {isMobile ? (
+        <div className="flex flex-col gap-3">
+          {matches.map((m, i) => (
+            <LiveMatchCard key={`${m.table}-${m.fr.name}-${i}`} match={m} />
+          ))}
+        </div>
+      ) : (
       <div className="ds-card overflow-x-auto" style={{ padding: 0 }}>
         <table className="w-full min-w-[800px]">
           <caption className="sr-only">
@@ -96,7 +106,171 @@ export default function LiveMatchesBlock({ liveRound, matches, scrapedAt }: Prop
           </tbody>
         </table>
       </div>
+      )}
     </section>
+  );
+}
+
+/**
+ * Variante mobile compacte d'un match. Card stackée verticale :
+ *
+ *   Table 28 ★              ⏱ en cours
+ *   ──────────────────────────────────
+ *   Jean-Emmanuel DEPRAZ           2
+ *   [Izzet Prowess ↗]
+ *   ─── vs ───
+ *   MJ_23                          1
+ *   [Mono-Green Landfall ↗]
+ */
+function LiveMatchCard({ match: m }: { match: LiveMatch }) {
+  const won = m.fr.gameWins > m.opponent.gameWins;
+  const lost = m.fr.gameWins < m.opponent.gameWins;
+  const tied = m.fr.gameWins === m.opponent.gameWins && m.hasResult;
+
+  const frScoreColor = m.hasResult
+    ? won
+      ? "var(--mana-green)"
+      : lost
+        ? "var(--mana-red)"
+        : "var(--text-secondary)"
+    : "var(--text-primary)";
+
+  return (
+    <div
+      className="ds-card p-4"
+      style={{ borderRadius: "var(--radius-lg)" }}
+    >
+      {/* Header : table + featured + status */}
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <div
+          className="flex items-center gap-2 tabular-nums font-mono"
+          style={{
+            fontSize: "0.875rem",
+            color: m.featured ? "var(--mana-multicolor)" : "var(--text-primary)",
+            fontWeight: m.featured ? 700 : 600,
+          }}
+        >
+          {m.featured && (
+            <Star
+              className="w-3.5 h-3.5"
+              style={{ color: "var(--mana-multicolor)" }}
+              aria-hidden="true"
+            />
+          )}
+          Table {m.table}
+        </div>
+        <StatusBadge hasResult={m.hasResult} won={won} lost={lost} tied={tied} />
+      </div>
+
+      {/* FR player line */}
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="min-w-0">
+          <div
+            className="font-mono uppercase truncate"
+            style={{
+              fontSize: "10px",
+              letterSpacing: "0.15em",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {m.fr.first}
+          </div>
+          <div
+            className="truncate"
+            style={{
+              fontFamily: "var(--font-heading)",
+              fontWeight: "var(--fw-semibold)",
+              fontSize: "1.0625rem",
+              color: "var(--text-primary)",
+              lineHeight: 1.2,
+            }}
+          >
+            {m.fr.last}
+          </div>
+        </div>
+        <div
+          className="tabular-nums font-mono shrink-0"
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            color: frScoreColor,
+          }}
+        >
+          {m.fr.gameWins}
+        </div>
+      </div>
+      <div className="mb-3">
+        <ArchetypeRef archetype={m.fr.archetype} url={m.fr.decklistUrl} />
+      </div>
+
+      {/* Separator vs */}
+      <div
+        className="font-mono uppercase mb-3 flex items-center gap-3"
+        style={{
+          fontSize: "9px",
+          letterSpacing: "0.3em",
+          color: "var(--text-secondary)",
+          opacity: 0.6,
+        }}
+      >
+        <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+        <span>vs</span>
+        <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+      </div>
+
+      {/* Opponent line */}
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="min-w-0">
+          {m.opponent.first && (
+            <div
+              className="font-mono uppercase truncate"
+              style={{
+                fontSize: "10px",
+                letterSpacing: "0.15em",
+                color: "var(--text-secondary)",
+                opacity: 0.85,
+              }}
+            >
+              {m.opponent.first}
+            </div>
+          )}
+          <div
+            className="truncate"
+            style={{
+              fontFamily: "var(--font-heading)",
+              fontWeight: "var(--fw-medium)",
+              fontSize: "1rem",
+              color: m.frVsFr ? "var(--mana-multicolor)" : "var(--text-primary)",
+              lineHeight: 1.2,
+            }}
+          >
+            {m.opponent.last || m.opponent.name}
+            {m.frVsFr && (
+              <span
+                className="ml-2 font-mono"
+                style={{ fontSize: "9px", color: "var(--mana-multicolor)" }}
+              >
+                FR
+              </span>
+            )}
+          </div>
+        </div>
+        <div
+          className="tabular-nums font-mono shrink-0"
+          style={{
+            fontSize: "1.25rem",
+            fontWeight: 600,
+            color: "var(--text-secondary)",
+          }}
+        >
+          {m.opponent.gameWins}
+        </div>
+      </div>
+      <ArchetypeRef
+        archetype={m.opponent.archetype}
+        url={m.opponent.decklistUrl}
+      />
+    </div>
   );
 }
 
