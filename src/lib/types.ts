@@ -85,6 +85,7 @@ export interface EventData {
   frenchPlayers: FrenchPlayer[];
   liveRound?: LiveRound;       // ronde actuellement en cours (si applicable)
   liveMatches?: LiveMatch[];   // matchs avec au moins un FR sur la ronde en cours
+  fieldArchetypes?: Record<string, number>;  // archetype name → count global, dédupé par TeamId
 }
 
 export type PerformanceTone =

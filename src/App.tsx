@@ -10,10 +10,16 @@ import ThresholdsBlock from "@/components/ThresholdsBlock";
 import MethodologyFooter from "@/components/MethodologyFooter";
 import MarketingHero from "@/components/MarketingHero";
 import LiveMatchesBlock from "@/components/LiveMatchesBlock";
+import ExportCsvButton from "@/components/ExportCsvButton";
+import PerformanceCard from "@/components/PerformanceCard";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 
 const EMPTY_PLAYERS: FrenchPlayer[] = [];
 
 export default function App() {
+  // Switch table desktop ↔ cards mobile à 768px (breakpoint Tailwind md)
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   const [events, setEvents] = useState<MTGEvent[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [eventData, setEventData] = useState<EventData | null>(null);
@@ -235,6 +241,7 @@ export default function App() {
                   value={stats.total}
                   sub={event.field ? `sur ${event.field}` : undefined}
                   highlightFr
+                  hint="Joueurs identifiés comme français dans le tournoi (cf. méthodologie en bas de page)"
                 />
                 <StatBlock
                   label="Encore en vie"
@@ -244,16 +251,19 @@ export default function App() {
                       ? `${((stats.active / stats.total) * 100).toFixed(0)}% du roster`
                       : "—"
                   }
+                  hint="Français qui n'ont pas drop et ont au moins 1 match gagné"
                 />
                 <StatBlock
                   label="Day 2 acquis"
                   value={stats.day2Lock}
                   sub="≥ 12 pts (officiel)"
+                  hint="Day 2 = passage au lendemain. À partir de 12 points (= 4 victoires) à la fin du Day 1, le joueur est qualifié pour la deuxième journée du Pro Tour."
                 />
                 <StatBlock
                   label="Sur rythme Top 8"
                   value={stats.onPaceTop8}
                   sub="≥ 18 pts à R8"
+                  hint="Le cut Top 8 d'un PT est généralement à 36 points (12 victoires sur 16 rondes). Pour rester sur ce rythme, il faut au minimum 18 pts à mi-tournoi (R8)."
                 />
               </div>
             </div>
@@ -303,15 +313,31 @@ export default function App() {
                   La délégation
                 </h3>
                 <div
-                  className="font-mono flex items-center gap-2"
+                  className="font-mono flex items-center gap-3 flex-wrap"
                   style={{ fontSize: "11px", color: "var(--text-secondary)" }}
                 >
-                  <Flag className="w-3 h-3" />
-                  Mise à jour : R{event.currentRound}{" "}
-                  {event.status === "live" && "· auto-refresh 5min"}
+                  <span className="inline-flex items-center gap-2">
+                    <Flag className="w-3 h-3" />
+                    Mise à jour : R{event.currentRound}
+                    {event.status === "live" && " · auto-refresh 5 min"}
+                  </span>
+                  {eventData && (
+                    <ExportCsvButton event={eventData} slug={selectedSlug ?? "event"} />
+                  )}
                 </div>
               </div>
 
+              {isMobile ? (
+                <div className="flex flex-col gap-3">
+                  {players.map((p) => (
+                    <PerformanceCard
+                      key={`${p.last}|${p.first}|${p.rank}`}
+                      player={p}
+                      event={event}
+                    />
+                  ))}
+                </div>
+              ) : (
               <div className="ds-card overflow-x-auto" style={{ padding: 0 }}>
                 <table className="w-full min-w-[1100px]">
                   <caption className="sr-only">
@@ -320,19 +346,20 @@ export default function App() {
                   </caption>
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
-                      {[
-                        "Rang",
-                        "Joueur",
-                        "Archétype",
-                        "Limited",
-                        "Construit",
-                        "Total",
-                        "Statut · Source",
-                      ].map((h, idx) => (
+                      {([
+                        ["Rang", "Position au standings global du tournoi"],
+                        ["Joueur", undefined],
+                        ["Archétype", "Cliquer pour voir la decklist sur melee.gg"],
+                        ["Limited", undefined],
+                        ["Construit", undefined],
+                        ["Total", "Match Points + tiebreakers (OMW : Opponent Match Win %, plus c'est haut mieux c'est)"],
+                        ["Statut · Source", "Statut = projection (Top 8 / requalif / hors course). Source = origine de l'invitation (RC EMEA, 39+ AMP, Worlds Top 8…)"],
+                      ] as Array<[string, string | undefined]>).map(([h, hint], idx) => (
                         <th
                           key={h}
                           scope="col"
                           className="font-mono uppercase font-normal text-left"
+                          title={hint}
                           style={{
                             padding: "12px",
                             paddingLeft: idx === 0 ? "1.5rem" : "12px",
@@ -342,6 +369,10 @@ export default function App() {
                             color: "var(--text-secondary)",
                             opacity: 0.7,
                             textAlign: idx === 5 ? "right" : "left",
+                            cursor: hint ? "help" : "default",
+                            textDecoration: hint ? "underline dotted" : "none",
+                            textUnderlineOffset: "3px",
+                            textDecorationThickness: "1px",
                           }}
                         >
                           {h === "Limited" ? (
@@ -393,6 +424,7 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+              )}
             </>
           ) : !eventLoading && !eventError ? (
             <div className="ds-card p-12 text-center">

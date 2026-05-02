@@ -4,13 +4,15 @@ interface Props {
   sub?: string;
   /** Surligne la card avec un trait latéral FR (pour les blocs vraiment importants) */
   highlightFr?: boolean;
+  /** Tooltip natif sur le label, pour expliquer le jargon (ex: "Day 2 acquis") */
+  hint?: string;
 }
 
 /**
  * Stat block — utilise .ds-card de ManaTuner (glass en dark).
  * Typo : label/sub en JetBrains Mono (techTerm), value en Cinzel.
  */
-export default function StatBlock({ label, value, sub, highlightFr }: Props) {
+export default function StatBlock({ label, value, sub, highlightFr, hint }: Props) {
   return (
     <div
       className={`ds-card p-4 ${highlightFr ? "ds-card--bordered-fr" : ""}`}
@@ -22,7 +24,13 @@ export default function StatBlock({ label, value, sub, highlightFr }: Props) {
           fontSize: "10px",
           letterSpacing: "0.2em",
           color: "var(--text-secondary)",
+          cursor: hint ? "help" : "default",
+          textDecoration: hint ? "underline dotted" : "none",
+          textUnderlineOffset: "3px",
+          textDecorationColor: "var(--text-secondary)",
+          textDecorationThickness: "1px",
         }}
+        title={hint}
       >
         {label}
       </div>

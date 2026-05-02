@@ -459,6 +459,33 @@ def _melee_player_name(row: dict[str, Any]) -> str:
     return " / ".join(p.get("DisplayNameLastFirst", "") for p in players)
 
 
+def build_field_archetypes(
+    pairings: list[dict[str, Any]],
+) -> dict[str, int]:
+    """Map archetype name → count à partir des pairings.
+
+    Permet de calculer la méta-share globale du tournoi (toutes nationalités).
+    On dédupe par TeamId pour ne pas compter un joueur plusieurs fois s'il
+    apparaît dans plusieurs matchs (impossible dans une ronde, mais défensif).
+    """
+    seen_teams: set[int] = set()
+    counts: dict[str, int] = {}
+    for match in pairings:
+        for c in match.get("Competitors") or []:
+            team_id = c.get("TeamId")
+            if team_id is None or team_id in seen_teams:
+                continue
+            seen_teams.add(team_id)
+            decklists = c.get("Decklists") or []
+            if not decklists:
+                continue
+            archetype = (decklists[0].get("DecklistName") or "").strip()
+            if not archetype:
+                continue
+            counts[archetype] = counts.get(archetype, 0) + 1
+    return counts
+
+
 def build_decklist_index(
     pairings: list[dict[str, Any]],
 ) -> dict[str, str]:
@@ -564,6 +591,7 @@ def build_event_data(
     existing: dict[str, Any] | None,
     live_round: dict[str, Any] | None = None,
     live_matches: list[dict[str, Any]] | None = None,
+    field_archetypes: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     """Construit le JSON final compatible avec le frontend."""
     # Extrait le numéro de ronde depuis "Round 8" → 8
@@ -634,6 +662,8 @@ def build_event_data(
             "started": live_round.get("started", False),
         }
         out["liveMatches"] = live_matches
+    if field_archetypes:
+        out["fieldArchetypes"] = field_archetypes
     return out
 
 
@@ -736,6 +766,7 @@ def main() -> int:
         live_round = pick_in_progress_round(meta["rounds"])
         live_matches: list[dict[str, Any]] = []
         decklist_index: dict[str, str] = {}
+        field_archetypes: dict[str, int] = {}
         if live_round:
             try:
                 pairings = fetch_pairings(client, tournament_id, live_round["id"])
@@ -747,7 +778,9 @@ def main() -> int:
                 logger.info("%d matchs sur %s (%s)",
                           len(pairings), live_round["name"], live_state)
                 decklist_index = build_decklist_index(pairings)
-                logger.info("%d decklists indexées", len(decklist_index))
+                field_archetypes = build_field_archetypes(pairings)
+                logger.info("%d decklists indexées, %d archétypes uniques",
+                          len(decklist_index), len(field_archetypes))
                 live_matches = filter_french_pairings(pairings, config)
                 logger.info("%d matchs avec au moins un Français",
                           len(live_matches))
@@ -764,6 +797,7 @@ def main() -> int:
         args.slug, meta, round_info, args.total_rounds,
         standings, french, existing,
         live_round=live_round, live_matches=live_matches,
+        field_archetypes=field_archetypes if field_archetypes else None,
     )
 
     output_path = args.output or DATA_OUT / f"{args.slug}.json"
