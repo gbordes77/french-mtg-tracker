@@ -1,63 +1,65 @@
 # French MTG Tracker
 
-> Suivi en temps réel des performances des joueurs français aux Pro Tours, Worlds et événements compétitifs Magic: The Gathering majeurs.
+> Suivi quasi temps réel des performances des **joueurs français** aux Pro Tours et événements compétitifs Magic: The Gathering majeurs.
 
-🌐 **Live** : [french-mtg-tracker.vercel.app](https://french-mtg-tracker.vercel.app)
-💬 **Contact / signaler un manque** : DM Discord à [GuillaumeB](https://discord.com/users/310382567323074561)
+**Live** : [french-mtg-tracker.vercel.app](https://french-mtg-tracker.vercel.app)
+**Stack** : Vite + React 18 + TypeScript + Tailwind 3 · Scrapers Python · GitHub Actions cron · Vercel
+**Sources** : melee.gg (primaire) · magic.gg (fallback + AMP standings)
+**Refresh** : toutes les 5 min pendant un PT actif (commit auto sur `main`)
+
+---
 
 ## Pourquoi
 
-Aucun site existant ne suit les Français exclusivement aux Pro Tours. magic.gg liste les standings globaux, mtgtop8 archive les decklists, mais personne ne synthétise « combien de Français en course pour Top 8 / requalif sur ce PT en cours ».
+Aucun site existant ne suit les Français exclusivement aux Pro Tours. `magic.gg` liste les standings globaux, `mtgtop8` archive les decklists, mais personne ne synthétise « combien de Français en course pour Top 8 / requalif sur ce PT en cours ». Ce site comble ce trou pour la communauté MTGTools FR.
 
-Ce projet comble ce trou en :
-- Identifiant rigoureusement les joueurs français (vs québécois, belges, suisses)
-- Affichant leurs performances détaillées (split Limited vs Construit)
-- Calculant les projections live (combien de victoires pour Top 8 / requalif)
-- Archivant l'historique pour suivre l'évolution de l'élite FR
-
-## Stack
-
-- **Frontend** : Vite + React 18 + TypeScript + Tailwind CSS
-- **Données** : JSON statiques générés par scraper Python
-- **Scraper** : Python + httpx + BeautifulSoup
-- **CI/CD** : GitHub Actions cron (toutes les 30 min pendant un PT)
-- **Hosting** : Vercel (frontend) + GitHub (data + actions)
+Concrètement, le tracker :
+- **Identifie rigoureusement** les joueurs français (vs québécois, belges francophones, suisses romands) — voir [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)
+- **Affiche** leurs performances détaillées (split Limited / Construit, OMW, archétype, decklist)
+- **Calcule** les projections live (combien de victoires sur les rondes restantes pour Top 8 / requalif)
+- **Trace** la course aux 39+ AMP sur la saison
 
 ## Démarrage rapide
 
 ```bash
-# 1. Cloner
 git clone https://github.com/gbordes77/french-mtg-tracker.git
 cd french-mtg-tracker
 
-# 2. Installer
+# Frontend
 pnpm install
+pnpm dev          # → http://localhost:5173
+
+# Scrapers (Python 3.11+)
+python -m venv scrapers/.venv && source scrapers/.venv/bin/activate
 pip install -r scrapers/requirements.txt
 
-# 3. Lancer le dev server
-pnpm dev
-# → http://localhost:5173
-
-# 4. (Optionnel) Lancer un scrape manuel
-python scrapers/scrape_event.py --slug pt-secrets-of-strixhaven --auto
+# Smoke test sur le PT en cours
+python scrapers/scrape_melee.py --slug pt-secrets-of-strixhaven --tournament-id 415628 --dry-run
 ```
 
-## Méthodologie
+## Documentation
 
-L'identification des Français est documentée en détail dans [`CLAUDE.md`](./CLAUDE.md). En résumé :
-
-- **Le prénom français n'est pas un indicateur fiable** (7M+ Québécois francophones)
-- Le vrai discriminant est le **circuit Regional Championship d'origine**
-- Les joueurs sont validés via croisement magic.gg invitation list + mtgtop8 historique RC + Twitter/X
+| Doc | Pour qui |
+|-----|---|
+| [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | Auditeurs externes, presse, communauté — comment on identifie un FR |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Devs qui veulent comprendre le pipeline data |
+| [`docs/API.md`](docs/API.md) | Devs qui veulent consommer les JSON publics |
+| [`docs/SCRAPERS.md`](docs/SCRAPERS.md) | Mainteneurs des scrapers (debug, évolution) |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Tout contributeur (ajout joueur FR, PR, conventions) |
+| [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md) | Designers / front-end (intégration ManaTuner) |
+| `CLAUDE.md` | Brief Claude Code (interne) |
 
 ## Contribuer
 
-Un joueur FR manque ? Une erreur ? Ouvrez une issue ou une PR.
+Un Français manque dans la roster ? Une erreur de classement ? **Ouvre une issue ou une PR.**
 
-Le fichier source de vérité est [`scrapers/data/french_players.yaml`](./scrapers/data/french_players.yaml).
+- Source de vérité : [`scrapers/data/french_players.yaml`](scrapers/data/french_players.yaml)
+- Format attendu, evidence requise, conventions de commit : [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
+Maintainer : Guillaume Bordes — DM Discord [@GuillaumeB](https://discord.com/users/310382567323074561)
 
 ## Licence
 
-MIT — projet communautaire indépendant, non affilié à Wizards of the Coast.
+[MIT](LICENSE) — projet communautaire indépendant, non affilié à Wizards of the Coast.
 
-> *Magic: The Gathering, Pro Tour, Magic Spotlight Series sont des marques déposées de Wizards of the Coast LLC.*
+> *Magic: The Gathering, Pro Tour, Magic Spotlight Series sont des marques déposées de Wizards of the Coast LLC. Les standings et noms de joueurs sont issus de sources publiques (melee.gg, magic.gg).*

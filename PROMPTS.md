@@ -1,6 +1,8 @@
 # PROMPTS.md — Prompts à copier-coller dans Claude Code
 
 > Tous ces prompts supposent que tu as ouvert Claude Code dans le dossier `french-mtg-tracker/`. Le `CLAUDE.md` à la racine sera lu automatiquement.
+>
+> Mise à jour mai 2026 : le pipeline est passé de magic.gg (lent, HTML) à **melee.gg primaire** + magic.gg fallback. Le cron est passé de 30 min à **5 min**. Un scraper `scrape_amp.py` a été ajouté pour les standings cumulés AMP.
 
 ## ────────────────────────────────────────────
 ## PHASE 0 — Bootstrap initial (à faire une fois)
@@ -23,8 +25,12 @@ Lis CLAUDE.md, puis :
 Installe les dépendances :
 - pnpm install (frontend)
 - pip install -r scrapers/requirements.txt (Python)
-Puis vérifie que le build TypeScript passe : pnpm tsc --noEmit
-Et que le scraper en mode dry-run marche : python scrapers/scrape_event.py --slug pt-secrets-of-strixhaven --dry-run
+
+Puis vérifie que :
+- le build TypeScript passe : pnpm tsc --noEmit
+- le scraper melee en mode dry-run marche :
+  python scrapers/scrape_melee.py --slug pt-secrets-of-strixhaven --tournament-id 415628 --dry-run
+
 Si erreurs, corrige-les sans me demander.
 ```
 
@@ -76,17 +82,28 @@ Lance pnpm dev en arrière-plan, attends que le serveur soit up, puis :
 4. Donne-moi l'URL pour que je puisse tester visuellement
 ```
 
-### Prompt 2.2 — Smoke test du scraper
+### Prompt 2.2 — Smoke test des scrapers
 
 ```
-Lance le scraper en mode debug sur le PT en cours :
+Lance les scrapers en mode debug :
 
-python scrapers/scrape_event.py --slug pt-secrets-of-strixhaven --round 8 --output /tmp/test.json
+# 1. melee.gg (primaire) sur le PT en cours
+python scrapers/scrape_melee.py --slug pt-secrets-of-strixhaven --tournament-id 415628 --dry-run -v
 
-Compare /tmp/test.json avec public/data/pt-secrets-of-strixhaven.json :
+# 2. magic.gg (fallback)
+python scrapers/scrape_event.py --slug pt-secrets-of-strixhaven --auto --dry-run
+
+# 3. AMP standings (post-PT)
+python scrapers/scrape_amp.py --dry-run -v
+
+Compare la sortie melee dry-run avec public/data/pt-secrets-of-strixhaven.json :
 - Mêmes joueurs FR identifiés ?
 - Mêmes scores ?
-- Si différence, est-ce dû à une mise à jour officielle ou à un bug du scraper ?
+- Mêmes archétypes / decklist IDs ?
+- Si différence sur un champ "preserved" (archetype, source, draftD1...) c'est attendu (le scraper merge avec l'existant pour préserver l'enrichissement manuel).
+- Si différence sur un champ auto (rank, points, omw, gw, ogw) → est-ce dû à une mise à jour officielle ou à un bug du scraper ?
+
+Voir docs/SCRAPERS.md pour les playbooks de recovery.
 ```
 
 ## ────────────────────────────────────────────
@@ -98,7 +115,7 @@ Compare /tmp/test.json avec public/data/pt-secrets-of-strixhaven.json :
 ```
 Avant de déployer sur Vercel :
 1. Vérifie que .env.example liste toutes les variables nécessaires (aucune secret n'est requise pour la v1)
-2. Crée un vercel.json minimal qui force le framework Vite et le build command pnpm build
+2. Vérifie que vercel.json force le framework Vite et le build command pnpm build
 3. Vérifie que le .gitignore ignore bien node_modules, dist, .DS_Store, .env
 4. Crée un commit "feat: initial bootstrap" si pas déjà fait
 5. Pousse sur github.com/gbordes77/french-mtg-tracker (crée le repo si besoin via gh repo create)
@@ -121,21 +138,22 @@ Déploie sur Vercel :
 ### Prompt 4.1 — Test workflow GitHub Actions
 
 ```
-1. Vérifie que .github/workflows/scrape.yml est correct
+1. Vérifie que .github/workflows/scrape.yml est correct (cron */5, melee primaire + magic.gg fallback)
 2. Pousse-le sur main
-3. Déclenche-le manuellement via gh workflow run scrape.yml
-4. Surveille l'exécution avec gh run watch
-5. Si succès, vérifie qu'il y a bien un commit auto "chore: refresh standings ..." avec un fichier JSON modifié
-6. Si échec, debug et corrige
+3. Déclenche-le manuellement via : gh workflow run scrape.yml
+4. Surveille l'exécution avec : gh run watch
+5. Si succès, vérifie qu'il y a bien un commit auto "chore: refresh standings <ISO>" avec un fichier JSON modifié
+6. Si échec, debug et corrige (cf. docs/SCRAPERS.md §5 playbooks)
 ```
 
 ### Prompt 4.2 — Activation cron live
 
 ```
 On entre dans la phase active : un PT démarre dans X heures.
-1. Édite scrape.yml pour activer le cron */30 * * * * (déjà fait normalement)
-2. Vérifie que le slug du PT en cours est dans events.json avec status="live"
+1. Vérifie que .github/workflows/scrape.yml a bien le cron */5 * * * * activé
+2. Vérifie que le slug du PT en cours est dans events.json avec status="live" ET meleeId renseigné
 3. Préviens-moi quand le premier scrape automatique réussit
+4. Vérifie au moins un commit "chore: refresh standings ..." dans les 10 min suivant le début du PT
 ```
 
 ## ────────────────────────────────────────────
@@ -147,13 +165,16 @@ On entre dans la phase active : un PT démarre dans X heures.
 ```
 Un nouveau PT démarre : {NOM_DU_PT}, slug {SLUG}, dates {DATES}, à {LIEU}.
 Format : {FORMAT}, prize pool {USD}.
+meleeId : {ID_OU_NULL_SI_PAS_ENCORE_PUBLIE}
 
-1. Ajoute l'événement dans public/data/events.json (status="upcoming")
-2. Crée public/data/{SLUG}.json vide avec la structure attendue
+1. Ajoute l'événement dans public/data/events.json (status="upcoming", meleeId si dispo)
+2. Crée public/data/{SLUG}.json vide avec la structure attendue (cf. docs/API.md)
 3. Récupère la liste d'invitation officielle :
    https://magic.gg/events/{SLUG}-invitation-list
-4. Filtre les Français potentiels selon la méthode dans CLAUDE.md (RC EMEA + Spotlight Lyon principalement)
+4. Filtre les Français potentiels selon la méthode dans docs/METHODOLOGY.md
+   (RC EMEA + Spotlight Lyon principalement, vérifier mtgtop8 + Twitter)
 5. Propose-moi une mise à jour de scrapers/data/french_players.yaml avec les nouveaux entrants
+   (toujours avec verified: true ET notes: + sources si exclus)
 6. ATTENDS MA VALIDATION avant de commit le YAML
 ```
 
@@ -161,15 +182,49 @@ Format : {FORMAT}, prize pool {USD}.
 
 ```
 Le PT a démarré. Bascule events.json : status="upcoming" → "live", ajoute currentRound=1.
-Lance un premier scrape manuel pour valider que le pipeline marche en réel.
+Si meleeId pas encore dans events.json, mets-le maintenant (récupère-le via melee.gg).
+Lance un premier scrape manuel pour valider que le pipeline marche en réel :
+  gh workflow run scrape.yml -f slug={SLUG}
+  gh run watch
+Vérifie que public/data/{SLUG}.json est bien rempli et committé par frenchmtg-bot.
 ```
 
-### Prompt 5.3 — Post-PT cleanup
+### Prompt 5.3 — Pendant le PT (suivi quotidien)
+
+```
+Vérifications à faire 2-3 fois par jour pendant un PT live :
+1. https://github.com/gbordes77/french-mtg-tracker/actions — est-ce que le cron tourne sans erreur ?
+2. Si erreurs : lire les logs, corriger (cf. docs/SCRAPERS.md §5)
+3. Vérifier que public/data/{SLUG}.json a un scrapedAt récent (< 10 min)
+4. Vérifier que les FR identifiés correspondent à la roster YAML (rien manqué ? rien en trop ?)
+5. Si nouvelle decklist publique, vérifier que archetype/decklistUrl sont remplis correctement
+```
+
+### Prompt 5.4 — Post-PT cleanup
 
 ```
 Le PT est terminé. Pour {SLUG} :
 1. Bascule status="live" → "ended" dans events.json
 2. Vérifie que finalRecord est bien rempli pour chaque joueur FR
-3. Génère un mini-récap textuel des perfs FR (Top 8 atteints, requalifs obtenues, AMP gagnés)
-4. Commit final avec message "feat: archive {SLUG}"
+3. Lance scrape_amp.py pour récupérer les nouveaux totaux AMP cumulés :
+   python scrapers/scrape_amp.py
+   git add public/data/amp.json && git commit -m "chore: refresh AMP post {SLUG}"
+4. Génère un mini-récap textuel des perfs FR (Top 8 atteints, requalifs obtenues, AMP gagnés)
+5. Commit final avec message "feat: archive {SLUG}"
+```
+
+## ────────────────────────────────────────────
+## PHASE 6 — Maintenance documentation
+## ────────────────────────────────────────────
+
+### Prompt 6.1 — Audit des docs
+
+```
+Tous les ~3 mois, audit de cohérence doc ↔ code :
+1. Lis README.md, CONTRIBUTING.md, docs/*.md
+2. Vérifie que :
+   - Les exemples de code dans docs/API.md correspondent aux types réels (src/lib/types.ts)
+   - Les CLI exemples dans docs/SCRAPERS.md fonctionnent (lance-les en --dry-run)
+   - Les seuils dans docs/METHODOLOGY.md (12/30/36/39) matchent src/lib/helpers.ts THRESHOLDS
+3. Si désynchro, corrige docs/* (PAS le code sans validation)
 ```
