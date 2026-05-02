@@ -89,12 +89,15 @@ export default function Header() {
           className="flex items-center gap-3 shrink-0"
           style={{ textDecoration: "none" }}
         >
-          <span className="flex items-center gap-0.5" style={{ fontSize: "14px" }}>
-            <i className="ms ms-cost ms-w" style={{ color: "#fff" }} />
-            <i className="ms ms-cost ms-u" style={{ color: "#fff" }} />
-            <i className="ms ms-cost ms-b" style={{ color: "#fff" }} />
-            <i className="ms ms-cost ms-r" style={{ color: "#fff" }} />
-            <i className="ms ms-cost ms-g" style={{ color: "#fff" }} />
+          {/* Mana symbols dans leurs couleurs canon (pas d'override color)
+              — comme dans le header ManaTuner. ms-cost rend chaque symbole
+              en pip coloré (cream/blue/black/red/green). */}
+          <span className="flex items-center gap-1" style={{ fontSize: "20px" }}>
+            <i className="ms ms-cost ms-w" />
+            <i className="ms ms-cost ms-u" />
+            <i className="ms ms-cost ms-b" />
+            <i className="ms ms-cost ms-r" />
+            <i className="ms ms-cost ms-g" />
           </span>
           <span
             style={{
