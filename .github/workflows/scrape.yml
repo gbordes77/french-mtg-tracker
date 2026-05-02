@@ -1,34 +1,33 @@
 name: Scrape Pro Tour standings
 
 on:
-  # Cron toutes les 30 min — désactivé par défaut, à activer pendant un PT actif
+  # Cron toutes les 5 min — melee.gg publie les standings 1-3 min après chaque
+  # ronde. Le step "Determine active events" filtre status=live, donc aucune
+  # requête HTTP si pas de PT actif (cron tourne mais exit-early).
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/5 * * * *"
 
-  # Déclenchement manuel via gh workflow run scrape.yml
+  # Déclenchement manuel
   workflow_dispatch:
     inputs:
       slug:
-        description: "Slug de l'événement (ex: pt-secrets-of-strixhaven)"
-        required: true
-        default: "pt-secrets-of-strixhaven"
-      round:
-        description: "Ronde précise (vide = auto)"
+        description: "Slug événement (sinon: tous les status=live)"
+        required: false
+      round_id:
+        description: "Round ID melee précis (sinon: dernière ronde complétée)"
         required: false
 
 permissions:
-  contents: write  # nécessaire pour push automatique
+  contents: write
 
 env:
-  # Force les actions JS sur Node 24 (Node 20 déprécié, retiré le 2026-06-02).
-  # À retirer quand actions/checkout et actions/setup-python publieront des
-  # versions natives Node 24.
+  # Force Node 24 (Node 20 déprécié 2026-06-02)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-
+    # Skip ce job si aucun event live (économise les minutes même si free tier)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,59 +45,107 @@ jobs:
       - name: Determine active events
         id: events
         env:
-          # Inputs passés via env quoted pour éviter toute injection shell.
           SLUG_INPUT: ${{ inputs.slug }}
         run: |
-          # Lit public/data/events.json et ne garde que les events status=live
-          python3 -c "
+          # Lit public/data/events.json et garde les events status=live qui ont un meleeId.
+          # Sortie: TWO outputs:
+          #  - events_json : "[{slug,meleeId,totalRounds}, ...]"
+          #  - has_events  : "true" / "false"
+          python3 <<'PYEOF'
           import json, os
           events = json.load(open('public/data/events.json'))
-          live = [e['slug'] for e in events if e['status'] == 'live']
           slug_input = os.environ.get('SLUG_INPUT', '').strip()
           if slug_input:
-              live = [slug_input]
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write(f'slugs={\" \".join(live)}\n')
-          print(f'Events à scraper: {live}')
-          "
+              live = [e for e in events if e['slug'] == slug_input]
+          else:
+              live = [e for e in events if e['status'] == 'live']
+          out = [
+              {
+                  'slug': e['slug'],
+                  'meleeId': e.get('meleeId'),
+                  'sourceUrl': e.get('sourceUrl'),
+                  'totalRounds': e.get('totalRounds', 16),
+              }
+              for e in live
+          ]
+          gh_out = os.environ['GITHUB_OUTPUT']
+          with open(gh_out, 'a') as f:
+              f.write(f'events_json={json.dumps(out)}\n')
+              f.write(f'has_events={"true" if out else "false"}\n')
+          print(f'Events à scraper: {[e["slug"] for e in out]}')
+          PYEOF
 
-      - name: Scrape each active event
-        if: steps.events.outputs.slugs != ''
+      - name: Scrape each active event (melee.gg primary, magic.gg fallback)
+        if: steps.events.outputs.has_events == 'true'
         env:
-          # Inputs interpolés dans le shell uniquement via variables env quotées.
-          # La validation finale du slug se fait côté Python (SLUG_REGEX).
-          ROUND_INPUT: ${{ inputs.round }}
-          SLUGS: ${{ steps.events.outputs.slugs }}
+          ROUND_ID_INPUT: ${{ inputs.round_id }}
+          EVENTS_JSON: ${{ steps.events.outputs.events_json }}
         run: |
           set -e
-          fail_count=0
           ok_count=0
-          for slug in $SLUGS; do
-            echo "▶ Scraping $slug"
-            if [ -n "$ROUND_INPUT" ]; then
-              if python scrapers/scrape_event.py --slug "$slug" --round "$ROUND_INPUT"; then
-                ok_count=$((ok_count + 1))
+          fail_count=0
+
+          # Loop via Python pour parser le JSON proprement (pas d'eval shell sur du JSON externe)
+          mapfile -t scrape_lines < <(python3 -c "
+          import json, os, shlex
+          for e in json.loads(os.environ['EVENTS_JSON']):
+              slug = e['slug']
+              melee_id = e.get('meleeId')
+              total_rounds = e.get('totalRounds', 16)
+              # Format: SLUG|MELEEID|TOTALROUNDS (vide si pas dispo)
+              print(f\"{slug}|{melee_id or ''}|{total_rounds}\")
+          ")
+
+          for line in "${scrape_lines[@]}"; do
+            IFS='|' read -r slug melee_id total_rounds <<< "$line"
+            echo "▶ Scraping $slug (melee_id=$melee_id, total_rounds=$total_rounds)"
+
+            scrape_ok=0
+
+            # Tentative #1 : melee.gg si meleeId présent
+            if [ -n "$melee_id" ]; then
+              if [ -n "$ROUND_ID_INPUT" ]; then
+                if python scrapers/scrape_melee.py \
+                    --slug "$slug" \
+                    --tournament-id "$melee_id" \
+                    --round-id "$ROUND_ID_INPUT" \
+                    --total-rounds "$total_rounds"; then
+                  scrape_ok=1
+                fi
               else
-                echo "⚠ Failed: $slug R$ROUND_INPUT"
-                fail_count=$((fail_count + 1))
-              fi
-            else
-              if python scrapers/scrape_event.py --slug "$slug" --auto; then
-                ok_count=$((ok_count + 1))
-              else
-                echo "⚠ Failed: $slug --auto"
-                fail_count=$((fail_count + 1))
+                if python scrapers/scrape_melee.py \
+                    --slug "$slug" \
+                    --tournament-id "$melee_id" \
+                    --total-rounds "$total_rounds"; then
+                  scrape_ok=1
+                fi
               fi
             fi
+
+            # Tentative #2 : fallback magic.gg si melee a échoué ou pas de meleeId
+            if [ "$scrape_ok" = "0" ]; then
+              echo "↳ Fallback magic.gg pour $slug"
+              if python scrapers/scrape_event.py --slug "$slug" --auto; then
+                scrape_ok=1
+              fi
+            fi
+
+            if [ "$scrape_ok" = "1" ]; then
+              ok_count=$((ok_count + 1))
+            else
+              echo "⚠ Failed: $slug (melee + magic.gg)"
+              fail_count=$((fail_count + 1))
+            fi
           done
-          echo "Résultat scrape: $ok_count OK, $fail_count fails"
-          # Si TOUS les events ont échoué, on signale au workflow
+
+          echo "Résultat: $ok_count OK, $fail_count fails"
           if [ "$ok_count" -eq 0 ] && [ "$fail_count" -gt 0 ]; then
-            echo "::error::Tous les events ont échoué ($fail_count/$fail_count)"
+            echo "::error::Tous les events ont échoué"
             exit 1
           fi
 
       - name: Commit & push if changes
+        if: steps.events.outputs.has_events == 'true'
         run: |
           git config user.name "frenchmtg-bot"
           git config user.email "bot@frenchmtg.app"

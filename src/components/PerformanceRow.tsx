@@ -80,7 +80,7 @@ export default function PerformanceRow({ player, event, isFirst }: Props) {
 
       {/* Archétype — chip avec mana symbols */}
       <td className="py-4 px-3 align-top">
-        <ArchetypeChip archetype={player.archetype} />
+        <ArchetypeChip archetype={player.archetype} decklistUrl={player.decklistUrl} />
       </td>
 
       {/* Limited */}

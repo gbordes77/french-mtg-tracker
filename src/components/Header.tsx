@@ -77,9 +77,12 @@ export default function Header() {
     <header
       className="sticky top-0 z-50 w-full"
       style={{
-        background: "var(--mana-blue)",
-        borderBottom: "1px solid rgba(0,0,0,0.15)",
-        boxShadow: "0 2px 12px rgba(14,104,171,0.25)",
+        // Bg sombre (near-black ManaTuner) pour que les 3 couleurs canon du
+        // drapeau FR (bleu #0055a4 / blanc / rouge #ef4135) soient toutes
+        // lisibles sur le logo.
+        background: "#0D0D0F",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
@@ -99,16 +102,19 @@ export default function Header() {
             <i className="ms ms-cost ms-r" />
             <i className="ms ms-cost ms-g" />
           </span>
+          {/* Tricolore drapeau FR canon : "French" bleu #0055a4,
+              "MTG" blanc, "Tracker" rouge #ef4135. */}
           <span
             style={{
               fontFamily: "var(--font-heading)",
               fontWeight: "var(--fw-bold)",
               fontSize: "1.25rem",
-              color: "#fff",
               letterSpacing: "0.02em",
             }}
           >
-            French <span style={{ color: "#ffd700" }}>MTG</span> Tracker
+            <span style={{ color: "var(--fr-blue)" }}>French </span>
+            <span style={{ color: "#ffffff" }}>MTG </span>
+            <span style={{ color: "var(--fr-red)" }}>Tracker</span>
           </span>
         </a>
 

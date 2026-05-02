@@ -9,6 +9,7 @@ import PerformanceRow from "@/components/PerformanceRow";
 import ThresholdsBlock from "@/components/ThresholdsBlock";
 import MethodologyFooter from "@/components/MethodologyFooter";
 import MarketingHero from "@/components/MarketingHero";
+import LiveMatchesBlock from "@/components/LiveMatchesBlock";
 
 const EMPTY_PLAYERS: FrenchPlayer[] = [];
 
@@ -269,6 +270,15 @@ export default function App() {
               />
             ))}
           </div>
+
+          {/* LIVE MATCHES — affiché si la ronde en cours a des matchs FR */}
+          {!eventLoading && !eventError && eventData?.liveRound && eventData?.liveMatches && eventData.liveMatches.length > 0 && (
+            <LiveMatchesBlock
+              liveRound={eventData.liveRound}
+              matches={eventData.liveMatches}
+              scrapedAt={eventData.scrapedAt}
+            />
+          )}
 
           {/* ROSTER TABLE */}
           {eventLoading && (
