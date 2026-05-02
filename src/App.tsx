@@ -259,18 +259,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* EVENT SELECTOR */}
-          <div id="events" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-            {events.map((e) => (
-              <EventCard
-                key={e.slug}
-                event={e}
-                active={e.slug === selectedSlug}
-                onClick={() => setSelectedSlug(e.slug)}
-              />
-            ))}
-          </div>
-
           {/* LIVE MATCHES — affiché si la ronde en cours a des matchs FR */}
           {!eventLoading && !eventError && eventData?.liveRound && eventData?.liveMatches && eventData.liveMatches.length > 0 && (
             <LiveMatchesBlock
@@ -427,6 +415,36 @@ export default function App() {
             <div id="seuils">
               <ThresholdsBlock />
             </div>
+
+            {/* À VENIR — uniquement les événements upcoming */}
+            {events.some((e) => e.status === "upcoming") && (
+              <section id="events" className="mb-12">
+                <h3
+                  className="italic mb-4"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontWeight: "var(--fw-medium)",
+                    fontSize: "1.5rem",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  À venir
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {events
+                    .filter((e) => e.status === "upcoming")
+                    .map((e) => (
+                      <EventCard
+                        key={e.slug}
+                        event={e}
+                        active={e.slug === selectedSlug}
+                        onClick={() => setSelectedSlug(e.slug)}
+                      />
+                    ))}
+                </div>
+              </section>
+            )}
+
             <div id="methodo">
               <MethodologyFooter event={event} />
             </div>

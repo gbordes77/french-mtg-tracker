@@ -22,7 +22,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "suivi", label: "Suivi", icon: Activity, href: "#suivi" },
-  { id: "events", label: "Événements", icon: Calendar, href: "#events" },
+  { id: "events", label: "À venir", icon: Calendar, href: "#events" },
   { id: "seuils", label: "Seuils", icon: Target, href: "#seuils" },
   { id: "methodo", label: "Méthodologie", icon: BookOpen, href: "#methodo" },
 ];

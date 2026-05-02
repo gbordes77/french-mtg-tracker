@@ -32,7 +32,7 @@ export default function MarketingHero() {
 
         {/* Tagline principale */}
         <p
-          className="max-w-2xl mx-auto mb-3"
+          className="max-w-2xl mx-auto"
           style={{
             fontFamily: "var(--font-body)",
             fontSize: "1.125rem",
@@ -44,18 +44,6 @@ export default function MarketingHero() {
           <strong>Pro Tours</strong>, <strong>Worlds</strong>,{" "}
           <strong>Magic Spotlight</strong> et{" "}
           <strong>Regional Championships EMEA</strong>.
-        </p>
-
-        {/* Liste compacte des événements suivis */}
-        <p
-          className="font-mono"
-          style={{
-            fontSize: "0.8rem",
-            color: "var(--text-secondary)",
-            letterSpacing: "0.05em",
-          }}
-        >
-          Pro Tour · World Championship · Magic Spotlight Series · Arena Championship · RC EMEA
         </p>
       </div>
     </section>
