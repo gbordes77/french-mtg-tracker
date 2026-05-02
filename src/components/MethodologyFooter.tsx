@@ -28,9 +28,7 @@ export default function MethodologyFooter({ event }: Props) {
           <div style={blockTitleStyle}>Méthodologie</div>
           <p style={bodyStyle}>
             Identification croisée via la liste d'invitation magic.gg, les{" "}
-            <em>Regional Championship</em> EMEA et les Spotlight Lyon. Les
-            Québécois et Belges francophones sont explicitement exclus via leur
-            circuit RC d'origine.
+            <em>Regional Championship</em> EMEA et les Spotlight Lyon.
           </p>
         </div>
         <div>
