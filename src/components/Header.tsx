@@ -1,4 +1,4 @@
-import { Activity, Calendar, Target, BookOpen, Github, Sun, Moon } from "lucide-react";
+import { Activity, Calendar, Target, Github, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
@@ -24,7 +24,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: "suivi", label: "Suivi", icon: Activity, href: "#suivi" },
   { id: "events", label: "À venir", icon: Calendar, href: "#events" },
   { id: "seuils", label: "Seuils", icon: Target, href: "#seuils" },
-  { id: "methodo", label: "Méthodologie", icon: BookOpen, href: "#methodo" },
 ];
 
 export default function Header() {

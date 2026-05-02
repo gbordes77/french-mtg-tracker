@@ -25,7 +25,9 @@ export default function MethodologyFooter({ event }: Props) {
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
-          <div style={blockTitleStyle}>Méthodologie</div>
+          <div style={blockTitleStyle}>
+            Méthodologie d'identification des joueurs français
+          </div>
           <p style={bodyStyle}>
             Identification croisée via la liste d'invitation magic.gg, les{" "}
             <em>Regional Championship</em> EMEA et les Spotlight en Europe.
@@ -35,16 +37,26 @@ export default function MethodologyFooter({ event }: Props) {
           <div style={blockTitleStyle}>Sources</div>
           <p style={bodyStyle}>
             magic.gg standings · melee.gg/Tournament/View/{event.meleeId || "TBD"}
-            · MTGTop8 · vérification Twitter/X.
+            · MTGTop8 (vérification du drapeau pays sur la fiche joueur).
           </p>
         </div>
         <div>
           <div style={blockTitleStyle}>Contribuer</div>
           <p style={bodyStyle}>
-            Un joueur français manque ? Une erreur ? Pull request sur{" "}
-            <span style={{ color: "var(--text-primary)" }}>
-              github.com/gbordes77/french-mtg-tracker
-            </span>
+            Un joueur français manque ? Une erreur ?{" "}
+            <a
+              href="https://discord.com/users/310382567323074561"
+              target="_blank"
+              rel="noreferrer noopener"
+              style={{
+                color: "var(--text-primary)",
+                textDecoration: "underline",
+                textDecorationColor: "var(--fr-blue)",
+                textUnderlineOffset: "3px",
+              }}
+            >
+              Contacte-moi en MP sur Discord
+            </a>
             .
           </p>
         </div>
